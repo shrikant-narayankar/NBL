@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import Books from './pages/Books';
 import Members from './pages/Members';
 import Borrow from './pages/Borrow';
+import IssueBook from './pages/IssueBook';
 
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
           <Route path="books" element={<Books />} />
           <Route path="members" element={<Members />} />
           <Route path="borrow" element={<Borrow />} />
+          <Route path="borrow/issue" element={<IssueBook />} />
 
         </Route>
       </Routes>

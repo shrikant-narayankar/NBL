@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../services/api';
 import Select from 'react-select';
 import Modal from '../components/Modal';
@@ -10,18 +11,6 @@ const Borrow = () => {
     const [statusFilter, setStatusFilter] = useState('borrowed'); // 'borrowed' | 'returned' | 'all'
     const [metadata, setMetadata] = useState({ total: 0, page: 1, size: 10, pages: 0 });
     const [isLoading, setIsLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-
-    // Form resources
-    const [members, setMembers] = useState([]);
-    const [books, setBooks] = useState([]);
-
-    const [formData, setFormData] = useState({
-        member_id: '',
-        book_id: '',
-        borrowed_date: new Date().toISOString().split('T')[0],
-        due_date: ''
-    });
 
     const fetchData = async (page = 1) => {
         try {
@@ -41,21 +30,7 @@ const Borrow = () => {
         }
     };
 
-    const fetchFormResources = async () => {
-        try {
-            // Fetch first page of members and books for the search dropdowns
-            // In a real app with large data, we'd use async-select for react-select
-            const [mResponse, bResponse] = await Promise.all([
-                api.getMembers(1, 100),
-                api.getBooks(1, 100)
-            ]);
-            setMembers(mResponse.items);
-            setBooks(bResponse.items);
-        } catch (e) {
-            console.error(e);
-            alert("Failed to load members or books");
-        }
-    }
+
 
     useEffect(() => {
         fetchData(metadata.page);
@@ -66,33 +41,9 @@ const Borrow = () => {
         setMetadata(m => ({ ...m, page: 1 }));
     }, [statusFilter]);
 
-    // Load resources when modal opens
-    useEffect(() => {
-        if (isModalOpen) {
-            fetchFormResources();
-        }
-    }, [isModalOpen]);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            await api.borrowBook({
-                ...formData,
-                member_id: parseInt(formData.member_id),
-                book_id: parseInt(formData.book_id)
-            });
-            setIsModalOpen(false);
-            setFormData({
-                member_id: '',
-                book_id: '',
-                borrowed_date: new Date().toISOString().split('T')[0],
-                due_date: ''
-            });
-            fetchData(1);
-        } catch (err) {
-            alert('Failed to borrow book: ' + err.message);
-        }
-    };
+
+
 
     const handleReturn = async (borrow) => {
         if (!confirm(`Return "${borrow.book.title}" from ${borrow.member.name}?`)) return;
@@ -138,10 +89,10 @@ const Borrow = () => {
                         ))}
                     </div>
 
-                    <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
+                    <Link to="/borrow/issue" className="btn btn-primary">
                         <Repeat size={20} />
                         Issue Book
-                    </button>
+                    </Link>
                 </div>
             </div>
 
@@ -217,71 +168,7 @@ const Borrow = () => {
                 </div>
             )}
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Issue Book">
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Select Member</label>
-                        <Select
-                            options={members.map(m => ({ value: m.id, label: `${m.name} (#${m.id})` }))}
-                            onChange={(option) => setFormData({ ...formData, member_id: option.value })}
-                            value={
-                                formData.member_id
-                                    ? { value: formData.member_id, label: members.find(m => m.id === formData.member_id)?.name + ` (#${formData.member_id})` }
-                                    : null
-                            }
-                            placeholder="Search & Select Member..."
-                            isSearchable
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Select Book</label>
-                        <Select
-                            options={books.map(b => ({
-                                value: b.id,
-                                label: `${b.title} (${b.available_copies} available)`,
-                                isDisabled: b.available_copies <= 0
-                            }))}
-                            onChange={(option) => setFormData({ ...formData, book_id: option.value })}
-                            value={
-                                formData.book_id
-                                    ? (() => {
-                                        const b = books.find(b => b.id === formData.book_id);
-                                        return b ? { value: b.id, label: `${b.title} (${b.available_copies} available)` } : null;
-                                    })()
-                                    : null
-                            }
-                            isOptionDisabled={(option) => option.isDisabled}
-                            placeholder="Search & Select Book..."
-                            isSearchable
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Borrowed Date</label>
-                        <input
-                            type="date"
-                            required
-                            value={formData.borrowed_date}
-                            onChange={e => setFormData({ ...formData, borrowed_date: e.target.value })}
-                        />
-                    </div>
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Due Date</label>
-                        <input
-                            type="date"
-                            required
-                            value={formData.due_date}
-                            onChange={e => setFormData({ ...formData, due_date: e.target.value })}
-                        />
-                    </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
-                        <button type="button" className="btn btn-ghost" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                        <button type="submit" className="btn btn-primary">Issue Book</button>
-                    </div>
-                </form>
-            </Modal>
         </div>
     );
 };

@@ -60,7 +60,7 @@ const Home = () => {
                 <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem' }}>Quick Actions</h2>
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                     <a href="/books" className="card" style={{ padding: '1rem 2rem', fontWeight: 600, color: 'var(--color-primary)' }}>Manage Books &rarr;</a>
-                    <a href="/borrow" className="card" style={{ padding: '1rem 2rem', fontWeight: 600, color: 'var(--color-primary)' }}>Issue a Book &rarr;</a>
+                    <a href="/borrow/issue" className="card" style={{ padding: '1rem 2rem', fontWeight: 600, color: 'var(--color-primary)' }}>Issue a Book &rarr;</a>
                 </div>
             </div>
         </div>
