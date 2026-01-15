@@ -20,10 +20,11 @@ import math
 async def get_books(
     db_session=Depends(get_db),
     page: int = Query(1, ge=1),
-    size: int = Query(10, ge=1, le=100)
+    size: int = Query(10, ge=1, le=100),
+    q: str | None = Query(None, description="Search query for title or author")
 ):
     skip = (page - 1) * size
-    items, total = await book_service.get_all_books(db_session, skip=skip, limit=size)
+    items, total = await book_service.get_all_books(db_session, skip=skip, limit=size, q=q)
     pages = math.ceil(total / size) if total > 0 else 0
     return PaginatedResponse(
         items=items,

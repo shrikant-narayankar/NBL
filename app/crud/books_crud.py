@@ -40,12 +40,21 @@ async def get_by_isbn(db: AsyncSession, isbn: str) -> Book | None:
 
 from sqlalchemy import func
 
-async def get_books(db: AsyncSession, skip: int = 0, limit: int = 10):
-    total_result = await db.execute(select(func.count()).select_from(Book))
+async def get_books(db: AsyncSession, skip: int = 0, limit: int = 10, q: str | None = None):
+    from sqlalchemy import or_
+    query = select(Book)
+    if q:
+        search_filter = or_(
+            Book.title.ilike(f"%{q}%"),
+            Book.author.ilike(f"%{q}%")
+        )
+        query = query.where(search_filter)
+
+    total_result = await db.execute(select(func.count()).select_from(query.alias()))
     total = total_result.scalar()
 
     result = await db.execute(
-        select(Book).offset(skip).limit(limit)
+        query.offset(skip).limit(limit)
     )
     items = result.scalars().all()
     return items, total

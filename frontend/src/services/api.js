@@ -12,7 +12,7 @@ const handleResponse = async (response) => {
 
 export const api = {
     // Books
-    getBooks: (page = 1, size = 10) => fetch(`${API_BASE}/books/?page=${page}&size=${size}`).then(handleResponse),
+    getBooks: (page = 1, size = 10, q = '') => fetch(`${API_BASE}/books/?page=${page}&size=${size}&q=${encodeURIComponent(q)}`).then(handleResponse),
     createBook: (book) =>
         fetch(`${API_BASE}/books/`, {
             method: 'POST',
@@ -41,10 +41,10 @@ export const api = {
         fetch(`${API_BASE}/members/${id}`, { method: 'DELETE' }).then(handleResponse),
 
     // Borrow
-    getActiveBorrows: (include = 'all', page = 1, size = 10) =>
-        fetch(`${API_BASE}/borrow/active?include=${include}&page=${page}&size=${size}`).then(handleResponse),
-    getBorrows: (status = 'all', include = 'all', page = 1, size = 10) =>
-        fetch(`${API_BASE}/borrow/?status=${status}&include=${include}&page=${page}&size=${size}`).then(handleResponse),
+    getActiveBorrows: (include = 'all', page = 1, size = 10, sortBy = 'borrowed_date', order = 'desc') =>
+        fetch(`${API_BASE}/borrow/active?include=${include}&page=${page}&size=${size}&sort_by=${sortBy}&order=${order}`).then(handleResponse),
+    getBorrows: (status = 'all', include = 'all', page = 1, size = 10, sortBy = 'borrowed_date', order = 'desc') =>
+        fetch(`${API_BASE}/borrow/?status=${status}&include=${include}&page=${page}&size=${size}&sort_by=${sortBy}&order=${order}`).then(handleResponse),
     borrowBook: (data) =>
         fetch(`${API_BASE}/borrow/`, {
             method: 'POST',

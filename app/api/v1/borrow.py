@@ -28,10 +28,12 @@ async def get_borrows(
     status: Status = Query(Status.all, description="Filter by status (borrowed, returned, all)"),
     include: Include = Query(Include.all, description="Include nested related data"),
     page: int = Query(1, ge=1),
-    size: int = Query(10, ge=1, le=100)
+    size: int = Query(10, ge=1, le=100),
+    sort_by: str = Query("borrowed_date", description="Sort by field: book, member, borrowed_date, due_date"),
+    order: str = Query("desc", description="Order: asc, desc")
 ):
     skip = (page - 1) * size
-    items, total = await borrow_service.list_borrows(db_session, status=status, include=include.value, skip=skip, limit=size)
+    items, total = await borrow_service.list_borrows(db_session, status=status, include=include.value, skip=skip, limit=size, sort_by=sort_by, order=order)
     pages = math.ceil(total / size) if total > 0 else 0
     return PaginatedResponse(
         items=items,
@@ -65,11 +67,13 @@ async def get_active_borrows(
     db_session=Depends(get_db),
     include: Include = Query(Include.all, description="Include nested related data: 'book', 'member', or 'all'"),
     page: int = Query(1, ge=1),
-    size: int = Query(10, ge=1, le=100)
+    size: int = Query(10, ge=1, le=100),
+    sort_by: str = Query("borrowed_date", description="Sort by field: book, member, borrowed_date, due_date"),
+    order: str = Query("desc", description="Order: asc, desc")
 ):
     """Return all currently borrowed (not-yet-returned) books."""
     skip = (page - 1) * size
-    items, total = await borrow_service.list_active_borrows(db_session, include=include.value, skip=skip, limit=size)
+    items, total = await borrow_service.list_active_borrows(db_session, include=include.value, skip=skip, limit=size, sort_by=sort_by, order=order)
     pages = math.ceil(total / size) if total > 0 else 0
     return PaginatedResponse(
         items=items,

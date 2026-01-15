@@ -17,11 +17,12 @@ const Books = () => {
         available_copies: 1
     });
     const [error, setError] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
-    const fetchBooks = async (page = 1) => {
+    const fetchBooks = async (page = 1, q = searchQuery) => {
         try {
             setIsLoading(true);
-            const response = await api.getBooks(page);
+            const response = await api.getBooks(page, 10, q);
             setBooks(response.items);
             setMetadata({
                 total: response.total,
@@ -38,7 +39,18 @@ const Books = () => {
     };
 
     useEffect(() => {
-        fetchBooks(metadata.page);
+        const delaySearch = setTimeout(() => {
+            fetchBooks(1, searchQuery);
+            setMetadata(prev => ({ ...prev, page: 1 }));
+        }, 300);
+
+        return () => clearTimeout(delaySearch);
+    }, [searchQuery]);
+
+    useEffect(() => {
+        if (metadata.page !== 1 || searchQuery === '') {
+            fetchBooks(metadata.page);
+        }
     }, [metadata.page]);
 
     const handleSubmit = async (e) => {
@@ -77,10 +89,30 @@ const Books = () => {
                     <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Books</h1>
                     <p style={{ color: 'var(--text-muted)' }}>Manage your library collection</p>
                 </div>
-                <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
-                    <Plus size={20} />
-                    Add Book
-                </button>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    <div style={{ position: 'relative' }}>
+                        <input
+                            type="text"
+                            placeholder="Search by title or author..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            style={{
+                                padding: '0.6rem 1rem',
+                                paddingLeft: '2.5rem',
+                                borderRadius: 'var(--radius-md)',
+                                width: '300px',
+                                fontSize: '0.875rem'
+                            }}
+                        />
+                        <div style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        </div>
+                    </div>
+                    <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
+                        <Plus size={20} />
+                        Add Book
+                    </button>
+                </div>
             </div>
 
             {isLoading ? (
@@ -101,7 +133,7 @@ const Books = () => {
                             {books.length === 0 ? (
                                 <tr>
                                     <td colSpan="5" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                                        No books found. Add one to get started.
+                                        {searchQuery ? `No books found matching "${searchQuery}"` : "No books found. Add one to get started."}
                                     </td>
                                 </tr>
                             ) : (

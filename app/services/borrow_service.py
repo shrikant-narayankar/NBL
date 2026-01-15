@@ -70,17 +70,17 @@ async def return_book(db: AsyncSession, return_request: ReturnRequest):
     return updated
 
 
-async def list_active_borrows(db: AsyncSession, include: str = "all", skip: int = 0, limit: int = 10):
+async def list_active_borrows(db: AsyncSession, include: str = "all", skip: int = 0, limit: int = 10, sort_by: str = "borrowed_date", order: str = "desc"):
     """Return all active (not returned) borrow transactions.
 
     include: 'book' | 'member' | 'all' to control which relationships are loaded.
     """
-    return await borrow_crud.get_active_borrows(db, include=include, skip=skip, limit=limit)
+    return await borrow_crud.get_active_borrows(db, include=include, skip=skip, limit=limit, sort_by=sort_by, order=order)
 
 
-async def list_borrows(db: AsyncSession, status: Status, include: str = "all", skip: int = 0, limit: int = 10):
+async def list_borrows(db: AsyncSession, status: Status, include: str = "all", skip: int = 0, limit: int = 10, sort_by: str = "borrowed_date", order: str = "desc"):
     """Generic list for borrows."""
-    return await borrow_crud.get_all_borrows(db, status=status, include=include, skip=skip, limit=limit)
+    return await borrow_crud.get_all_borrows(db, status=status, include=include, skip=skip, limit=limit, sort_by=sort_by, order=order)
 
 
 async def delete_borrow(db: AsyncSession, borrow_id: int):

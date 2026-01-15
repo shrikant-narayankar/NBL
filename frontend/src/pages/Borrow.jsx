@@ -11,11 +11,12 @@ const Borrow = () => {
     const [statusFilter, setStatusFilter] = useState('borrowed'); // 'borrowed' | 'returned' | 'all'
     const [metadata, setMetadata] = useState({ total: 0, page: 1, size: 10, pages: 0 });
     const [isLoading, setIsLoading] = useState(true);
+    const [sortConfig, setSortConfig] = useState({ key: 'borrowed_date', order: 'desc' });
 
     const fetchData = async (page = 1) => {
         try {
             setIsLoading(true);
-            const response = await api.getBorrows(statusFilter, 'all', page);
+            const response = await api.getBorrows(statusFilter, 'all', page, 10, sortConfig.key, sortConfig.order);
             setActiveBorrows(response.items);
             setMetadata({
                 total: response.total,
@@ -34,7 +35,7 @@ const Borrow = () => {
 
     useEffect(() => {
         fetchData(metadata.page);
-    }, [statusFilter, metadata.page]);
+    }, [statusFilter, metadata.page, sortConfig]);
 
     // Reset page when filter changes
     useEffect(() => {
@@ -67,6 +68,27 @@ const Borrow = () => {
                     <p style={{ color: 'var(--text-muted)' }}>Manage book circulation</p>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--bg-card)', padding: '0.25rem 0.75rem', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
+                        <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: 500 }}>Sort by:</span>
+                        <select
+                            value={sortConfig.key}
+                            onChange={(e) => setSortConfig({ ...sortConfig, key: e.target.value })}
+                            style={{ border: 'none', background: 'transparent', width: 'auto', padding: '0.25rem', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-primary)' }}
+                        >
+                            <option value="borrowed_date">Borrowed Date</option>
+                            <option value="due_date">Due Date</option>
+                            <option value="book">Book Title</option>
+                            <option value="member">Member Name</option>
+                        </select>
+                        <button
+                            onClick={() => setSortConfig({ ...sortConfig, order: sortConfig.order === 'asc' ? 'desc' : 'asc' })}
+                            style={{ padding: '0.25rem', borderRadius: '4px', backgroundColor: 'rgba(0,0,0,0.05)', display: 'flex' }}
+                            title={sortConfig.order === 'asc' ? 'Ascending' : 'Descending'}
+                        >
+                            <span style={{ fontSize: '0.75rem' }}>{sortConfig.order === 'asc' ? '↑' : '↓'}</span>
+                        </button>
+                    </div>
+
                     <div style={{ display: 'flex', backgroundColor: 'var(--bg-card)', borderRadius: 'var(--radius)', border: '1px solid var(--border)', padding: '0.25rem', gap: '0.25rem' }}>
                         {['borrowed', 'returned', 'all'].map((status) => (
                             <button
