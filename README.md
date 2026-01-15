@@ -2,6 +2,9 @@
 
 A web application for sharing and borrowing books within a neighbourhood.
 
+![NBL Dashboard](.assets/NBL_dashboard.png)
+
+
 ## Prerequisites
 
 - [Docker](https://www.docker.com/) (for Docker Compose method)
