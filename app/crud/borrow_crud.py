@@ -42,6 +42,16 @@ async def get_borrows_by_member(db: AsyncSession, member_id: int, status:Status)
     return borrows
 
 
+async def delete_by_id(db: AsyncSession, borrow_id: int):
+    result = await db.execute(select(BorrowTransaction).where(BorrowTransaction.id == borrow_id))
+    borrow = result.scalar_one_or_none()
+    if not borrow:
+        return None
+    await db.delete(borrow)
+    await db.commit()
+    return borrow
+
+
 async def get_active_borrows(db: AsyncSession, include: str = "all"):
     """Return all borrow transactions that have not been returned yet.
 

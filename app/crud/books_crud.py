@@ -48,3 +48,13 @@ async def update(db: AsyncSession, book: Book) -> Book:
     await db.commit()
     await db.refresh(book)
     return book
+
+
+async def delete_by_id(db: AsyncSession, book_id: int) -> Book | None:
+    result = await db.execute(select(Book).where(Book.id == book_id))
+    book = result.scalar_one_or_none()
+    if not book:
+        return None
+    await db.delete(book)
+    await db.commit()
+    return book

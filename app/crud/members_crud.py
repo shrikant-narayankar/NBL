@@ -22,3 +22,13 @@ async def get_all_members(db: AsyncSession):
         select(Member)
     )
     return result.scalars().all()
+
+
+async def delete_by_id(db: AsyncSession, member_id: int) -> Member | None:
+    result = await db.execute(select(Member).where(Member.id == member_id))
+    member = result.scalar_one_or_none()
+    if not member:
+        return None
+    await db.delete(member)
+    await db.commit()
+    return member

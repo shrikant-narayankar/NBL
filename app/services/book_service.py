@@ -31,3 +31,13 @@ async def update_book(db: AsyncSession, book_id: int, book_update: BookUpdateReq
         setattr(existing, key, value)
 
     return await update(db, existing)
+
+
+async def delete_book(db: AsyncSession, book_id: int):
+    from app.crud.books_crud import delete_by_id
+    from fastapi import HTTPException
+
+    deleted = await delete_by_id(db, book_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail=f"Book with id {book_id} not found")
+    return None

@@ -13,3 +13,13 @@ async def get_members(db: AsyncSession):
     from app.crud.members_crud import get_all_members
     return await get_all_members(db)
 
+
+async def delete_member(db: AsyncSession, member_id: int):
+    from app.crud.members_crud import delete_by_id
+    from fastapi import HTTPException
+
+    deleted = await delete_by_id(db, member_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail=f"Member with id {member_id} not found")
+    return None
+

@@ -72,3 +72,11 @@ async def list_active_borrows(db: AsyncSession, include: str = "all"):
     include: 'book' | 'member' | 'all' to control which relationships are loaded.
     """
     return await borrow_crud.get_active_borrows(db, include=include)
+
+
+async def delete_borrow(db: AsyncSession, borrow_id: int):
+    deleted = await borrow_crud.delete_by_id(db, borrow_id)
+    from fastapi import HTTPException
+    if not deleted:
+        raise HTTPException(status_code=404, detail=f"Borrow transaction with id {borrow_id} not found")
+    return None

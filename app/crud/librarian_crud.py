@@ -23,3 +23,13 @@ async def update(db: AsyncSession, librarian: Librarian) -> Librarian:
     await db.commit()
     await db.refresh(librarian)
     return librarian
+
+
+async def delete_by_id(db: AsyncSession, librarian_id: int) -> Librarian | None:
+    result = await db.execute(select(Librarian).where(Librarian.id == librarian_id))
+    lib = result.scalar_one_or_none()
+    if not lib:
+        return None
+    await db.delete(lib)
+    await db.commit()
+    return lib

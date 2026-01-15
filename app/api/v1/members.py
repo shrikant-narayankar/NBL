@@ -24,3 +24,10 @@ async def get_members(db_session=Depends(get_db)):
 @router.patch("/", status_code=status.HTTP_200_OK)
 async def update_member(member: MemberUpdate, db_session=Depends(get_db)):
     return {"message": "Member updated", "member": member}
+
+
+@router.delete("/{member_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_member(member_id: int, db_session=Depends(get_db)):
+    await member_service.delete_member(db_session, member_id)
+    from fastapi import Response
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

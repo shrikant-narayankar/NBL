@@ -13,6 +13,7 @@ from fastapi import Query
 from fastapi import status
 from app.services import borrow_service
 from app.db.session import get_db
+from fastapi import Response
 router = APIRouter()
 
 
@@ -40,4 +41,10 @@ async def get_active_borrows(
     Use the 'include' query parameter to control whether nested book/member objects are returned.
     """
     return await borrow_service.list_active_borrows(db_session, include=include.value)
+
+
+@router.delete("/{borrow_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_borrow(borrow_id: int, db_session=Depends(get_db)):
+    await borrow_service.delete_borrow(db_session, borrow_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
