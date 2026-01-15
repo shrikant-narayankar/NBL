@@ -16,7 +16,7 @@ class NBLSettings(BaseSettings):
     POSTGRES_USER: str = "nbl"
     POSTGRES_PASSWORD: str = "nblpassword"
     POSTGRES_DB: str = "nbl_db"
-    POSTGRES_HOST: str = "localhost"
+    POSTGRES_HOST: str = "db"
     POSTGRES_PORT: int = 5432
 
     # alembic (optional)

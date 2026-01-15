@@ -1,8 +1,8 @@
-"""initial tables
+"""removed unique constraint
 
-Revision ID: 716768804c4c
+Revision ID: 52788811fa66
 Revises: 
-Create Date: 2026-01-15 18:33:19.062066
+Create Date: 2026-01-15 18:57:52.258821
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '716768804c4c'
+revision: str = '52788811fa66'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -47,8 +47,7 @@ def upgrade() -> None:
     sa.Column('returned_date', sa.Date(), nullable=True),
     sa.ForeignKeyConstraint(['book_id'], ['books.id'], ),
     sa.ForeignKeyConstraint(['member_id'], ['members.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('member_id', 'book_id', name='uq_borrow_member_book')
+    sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
 

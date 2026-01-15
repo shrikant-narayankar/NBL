@@ -15,6 +15,7 @@ const Borrow = () => {
     const [formData, setFormData] = useState({
         member_id: '',
         book_id: '',
+        borrowed_date: new Date().toISOString().split('T')[0],
         due_date: ''
     });
 
@@ -61,7 +62,12 @@ const Borrow = () => {
                 book_id: parseInt(formData.book_id)
             });
             setIsModalOpen(false);
-            setFormData({ member_id: '', book_id: '', due_date: '' });
+            setFormData({
+                member_id: '',
+                book_id: '',
+                borrowed_date: new Date().toISOString().split('T')[0],
+                due_date: ''
+            });
             fetchData();
         } catch (err) {
             alert('Failed to borrow book: ' + err.message);
@@ -176,6 +182,15 @@ const Borrow = () => {
                                 </option>
                             ))}
                         </select>
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Borrowed Date</label>
+                        <input
+                            type="date"
+                            required
+                            value={formData.borrowed_date}
+                            onChange={e => setFormData({ ...formData, borrowed_date: e.target.value })}
+                        />
                     </div>
                     <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Due Date</label>

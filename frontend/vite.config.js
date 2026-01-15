@@ -12,5 +12,11 @@ export default defineConfig({
         secure: false,
       },
     },
+    host: true, // needed for Docker
+    strictPort: true,
+    port: 5173,
+    watch: {
+      usePolling: true,
+    },
   },
 })

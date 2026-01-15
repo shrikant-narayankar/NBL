@@ -6,9 +6,7 @@ from app.db.base import Base
 
 class BorrowTransaction(Base):
     __tablename__ = "borrow_transactions"
-    __table_args__ = (
-        UniqueConstraint("member_id", "book_id", name="uq_borrow_member_book"),
-    )
+    # UniqueConstraint removed to allow multiple borrows of same book by same member
 
     id = Column(Integer, primary_key=True)
 

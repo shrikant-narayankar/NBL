@@ -20,7 +20,13 @@ router = APIRouter()
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def borrow_book(member: BorrowRequest,db_session=Depends(get_db)):
-    return await borrow_service.borrow_book(db_session, member_id=member.member_id, book_id=member.book_id)
+    return await borrow_service.borrow_book(
+        db_session, 
+        member_id=member.member_id, 
+        book_id=member.book_id,
+        borrowed_date=member.borrowed_date,
+        due_date=member.due_date
+    )
 
 @router.patch("/", status_code=status.HTTP_200_OK)
 async def return_book(return_request: ReturnRequest, db_session=Depends(get_db)):

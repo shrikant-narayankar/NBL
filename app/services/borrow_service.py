@@ -16,7 +16,9 @@ class MemberNotFound(Exception):
 async def borrow_book(
     db: AsyncSession,
     member_id: int,
-    book_id: int
+    book_id: int,
+    borrowed_date: date,
+    due_date: date
 ):
     book = await get_by_id(db, book_id)
     member = await members_crud.get_by_id(db, member_id)
@@ -34,7 +36,8 @@ async def borrow_book(
     borrow = BorrowTransaction(
         member_id=member_id,
         book_id=book_id,
-        borrowed_date=date.today()
+        borrowed_date=borrowed_date,
+        due_date=due_date
     )
 
     await borrow_crud.create(db, borrow)
