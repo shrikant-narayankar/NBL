@@ -43,6 +43,8 @@ export const api = {
     // Borrow
     getActiveBorrows: (include = 'all') =>
         fetch(`${API_BASE}/borrow/active?include=${include}`).then(handleResponse),
+    getBorrows: (status = 'all', include = 'all') =>
+        fetch(`${API_BASE}/borrow/?status=${status}&include=${include}`).then(handleResponse),
     borrowBook: (data) =>
         fetch(`${API_BASE}/borrow/`, {
             method: 'POST',

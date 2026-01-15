@@ -5,6 +5,7 @@ from app.schemas.borrow import ReturnRequest
 from app.models.book import Book
 from app.crud.books_crud import get_by_id, update
 from app.crud import members_crud
+from app.schemas.members import Status
 
 from app.crud import borrow_crud
 
@@ -75,6 +76,11 @@ async def list_active_borrows(db: AsyncSession, include: str = "all"):
     include: 'book' | 'member' | 'all' to control which relationships are loaded.
     """
     return await borrow_crud.get_active_borrows(db, include=include)
+
+
+async def list_borrows(db: AsyncSession, status: Status, include: str = "all"):
+    """Generic list for borrows."""
+    return await borrow_crud.get_all_borrows(db, status=status, include=include)
 
 
 async def delete_borrow(db: AsyncSession, borrow_id: int):

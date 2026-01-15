@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { api } from '../services/api';
+import Select from 'react-select'; // npm install react-select
 import Modal from '../components/Modal';
 import { Repeat, CheckCircle, AlertCircle } from 'lucide-react';
 
 const Borrow = () => {
     const [activeBorrows, setActiveBorrows] = useState([]);
+    const [statusFilter, setStatusFilter] = useState('borrowed'); // 'borrowed' | 'returned' | 'all'
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -22,7 +24,7 @@ const Borrow = () => {
     const fetchData = async () => {
         try {
             setIsLoading(true);
-            const borrows = await api.getActiveBorrows('all');
+            const borrows = await api.getBorrows(statusFilter, 'all');
             setActiveBorrows(borrows);
         } catch (err) {
             console.error(err);
@@ -44,7 +46,7 @@ const Borrow = () => {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [statusFilter]);
 
     // Load resources when modal opens
     useEffect(() => {
@@ -95,10 +97,34 @@ const Borrow = () => {
                     <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Borrowing</h1>
                     <p style={{ color: 'var(--text-muted)' }}>Manage book circulation</p>
                 </div>
-                <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
-                    <Repeat size={20} />
-                    Issue Book
-                </button>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', backgroundColor: 'var(--bg-card)', borderRadius: 'var(--radius)', border: '1px solid var(--border)', padding: '0.25rem', gap: '0.25rem' }}>
+                        {['borrowed', 'returned', 'all'].map((status) => (
+                            <button
+                                key={status}
+                                onClick={() => setStatusFilter(status)}
+                                style={{
+                                    padding: '0.5rem 1rem',
+                                    borderRadius: 'calc(var(--radius) - 2px)',
+                                    border: 'none',
+                                    backgroundColor: statusFilter === status ? 'var(--color-primary)' : 'transparent',
+                                    color: statusFilter === status ? '#fff' : 'var(--text-muted)',
+                                    cursor: 'pointer',
+                                    fontWeight: 500,
+                                    fontSize: '0.875rem',
+                                    textTransform: 'capitalize'
+                                }}
+                            >
+                                {status === 'borrowed' ? 'Active' : status === 'returned' ? 'History' : 'All'}
+                            </button>
+                        ))}
+                    </div>
+
+                    <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
+                        <Repeat size={20} />
+                        Issue Book
+                    </button>
+                </div>
             </div>
 
             {isLoading ? (
@@ -112,6 +138,7 @@ const Borrow = () => {
                                 <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--text-muted)' }}>Member</th>
                                 <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--text-muted)' }}>Borrowed Date</th>
                                 <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--text-muted)' }}>Due Date</th>
+                                {statusFilter !== 'borrowed' && <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--text-muted)' }}>Returned Date</th>}
                                 <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--text-muted)' }}>Actions</th>
                             </tr>
                         </thead>
@@ -126,23 +153,36 @@ const Borrow = () => {
                                 activeBorrows.map((borrow) => {
                                     /* Check if overdue */
                                     const isOverdue = new Date(borrow.due_date) < new Date();
+                                    const isReturnedLate = borrow.returned_date && new Date(borrow.returned_date) > new Date(borrow.due_date);
+
+                                    const isLateValues = (!borrow.returned_date && isOverdue) || isReturnedLate;
 
                                     return (
-                                        <tr key={borrow.id} style={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+                                        <tr key={borrow.id} style={{
+                                            borderBottom: '1px solid rgba(0,0,0,0.05)',
+                                            backgroundColor: isLateValues ? 'rgba(255, 0, 0, 0.05)' : 'transparent'
+                                        }}>
                                             <td style={{ padding: '1rem', fontWeight: 500 }}>{borrow.book?.title || 'Unknown Book'}</td>
                                             <td style={{ padding: '1rem' }}>{borrow.member?.name || 'Unknown Member'}</td>
                                             <td style={{ padding: '1rem' }}>{borrow.borrowed_date}</td>
                                             <td style={{ padding: '1rem' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: isOverdue ? 'red' : 'inherit' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: isLateValues ? 'red' : 'inherit' }}>
                                                     {borrow.due_date}
-                                                    {isOverdue && <AlertCircle size={16} />}
+                                                    {isLateValues && <AlertCircle size={16} />}
                                                 </div>
                                             </td>
+                                            {statusFilter !== 'borrowed' && (
+                                                <td style={{ padding: '1rem', color: isReturnedLate ? 'red' : 'var(--text-muted)' }}>
+                                                    {borrow.returned_date || '-'}
+                                                </td>
+                                            )}
                                             <td style={{ padding: '1rem' }}>
-                                                <button className="btn btn-ghost" onClick={() => handleReturn(borrow)} style={{ color: 'green', gap: '0.25rem' }}>
-                                                    <CheckCircle size={18} />
-                                                    Return
-                                                </button>
+                                                {!borrow.returned_date && (
+                                                    <button className="btn btn-ghost" onClick={() => handleReturn(borrow)} style={{ color: 'green', gap: '0.25rem' }}>
+                                                        <CheckCircle size={18} />
+                                                        Return
+                                                    </button>
+                                                )}
                                             </td>
                                         </tr>
                                     )
@@ -157,31 +197,41 @@ const Borrow = () => {
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Select Member</label>
-                        <select
+                        <Select
+                            options={members.map(m => ({ value: m.id, label: `${m.name} (#${m.id})` }))}
+                            onChange={(option) => setFormData({ ...formData, member_id: option.value })}
+                            value={
+                                formData.member_id
+                                    ? { value: formData.member_id, label: members.find(m => m.id === formData.member_id)?.name + ` (#${formData.member_id})` }
+                                    : null
+                            }
+                            placeholder="Search & Select Member..."
+                            isSearchable
                             required
-                            value={formData.member_id}
-                            onChange={e => setFormData({ ...formData, member_id: e.target.value })}
-                        >
-                            <option value="">-- Select Member --</option>
-                            {members.map(m => (
-                                <option key={m.id} value={m.id}>{m.name} (#{m.id})</option>
-                            ))}
-                        </select>
+                        />
                     </div>
                     <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Select Book</label>
-                        <select
+                        <Select
+                            options={books.map(b => ({
+                                value: b.id,
+                                label: `${b.title} (${b.available_copies} available)`,
+                                isDisabled: b.available_copies <= 0
+                            }))}
+                            onChange={(option) => setFormData({ ...formData, book_id: option.value })}
+                            value={
+                                formData.book_id
+                                    ? (() => {
+                                        const b = books.find(b => b.id === formData.book_id);
+                                        return b ? { value: b.id, label: `${b.title} (${b.available_copies} available)` } : null;
+                                    })()
+                                    : null
+                            }
+                            isOptionDisabled={(option) => option.isDisabled}
+                            placeholder="Search & Select Book..."
+                            isSearchable
                             required
-                            value={formData.book_id}
-                            onChange={e => setFormData({ ...formData, book_id: e.target.value })}
-                        >
-                            <option value="">-- Select Book --</option>
-                            {books.map(b => (
-                                <option key={b.id} value={b.id} disabled={b.available_copies <= 0}>
-                                    {b.title} ({b.available_copies} available)
-                                </option>
-                            ))}
-                        </select>
+                        />
                     </div>
                     <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Borrowed Date</label>

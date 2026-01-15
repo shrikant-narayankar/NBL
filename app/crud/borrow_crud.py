@@ -52,23 +52,17 @@ async def delete_by_id(db: AsyncSession, borrow_id: int):
     return borrow
 
 
-async def get_active_borrows(db: AsyncSession, include: str = "all"):
-    """Return all borrow transactions that have not been returned yet.
+async def get_all_borrows(db: AsyncSession, status: Status, include: str = "all"):
+    """Generic fetch for borrows based on status."""
+    query = select(BorrowTransaction)
+    
+    if status == Status.borrowed:
+        query = query.where(BorrowTransaction.returned_date == None)
+    elif status == Status.returned:
+        query = query.where(BorrowTransaction.returned_date != None)
+    # if Status.all, no filter on returned_date
 
-    include: one of 'book', 'member', 'all' to control which related objects are eager-loaded.
-    """
-    query = select(BorrowTransaction).where(BorrowTransaction.returned_date == None)
-
-    # conditionally load relations to avoid unnecessary JOINs
-    # if include == "book":
-    #     query = query.options(selectinload(BorrowTransaction.book))
-    # elif include == "member":
-    #     query = query.options(selectinload(BorrowTransaction.member))
-    # else:
-    #     # default: load both
-    #     query = query.options(selectinload(BorrowTransaction.book), selectinload(BorrowTransaction.member))
     options = []
-
     if include == "book":
         options.append(selectinload(BorrowTransaction.book))
     elif include == "member":
@@ -82,3 +76,11 @@ async def get_active_borrows(db: AsyncSession, include: str = "all"):
     query = query.options(*options)
     result = await db.execute(query)
     return result.scalars().all()
+
+
+async def get_active_borrows(db: AsyncSession, include: str = "all"):
+    return await get_all_borrows(db, status=Status.borrowed, include=include)
+
+
+async def get_history_borrows(db: AsyncSession, include: str = "all"):
+    return await get_all_borrows(db, status=Status.returned, include=include)

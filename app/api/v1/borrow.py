@@ -9,6 +9,7 @@ from app.schemas.borrow import (
     ActiveBorrowWithAll,
     Include,
 )
+from app.schemas.members import Status
 from fastapi import Query
 from fastapi import status
 from app.services import borrow_service
@@ -17,6 +18,14 @@ from fastapi import Response
 router = APIRouter()
 
 
+
+@router.get("/", status_code=status.HTTP_200_OK, response_model=list[Union[ActiveBorrowWithBook, ActiveBorrowWithMember, ActiveBorrowWithAll]])
+async def get_borrows(
+    db_session=Depends(get_db),
+    status: Status = Query(Status.all, description="Filter by status (borrowed, returned, all)"),
+    include: Include = Query(Include.all, description="Include nested related data"),
+):
+    return await borrow_service.list_borrows(db_session, status=status, include=include.value)
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def borrow_book(member: BorrowRequest,db_session=Depends(get_db)):
