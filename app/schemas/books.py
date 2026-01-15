@@ -17,7 +17,6 @@ class BookCreateRequest(BaseModel):
     isbn: str = Field(..., min_length=1, max_length=20, description="ISBN number")
     total_copies: int = Field(default=1, ge=1, description="Total number of copies")
     available_copies: int = Field(default=1, ge=0, description="Available copies")
-    added_by: int = Field(..., description="ID of librarian adding the book")
 
     @validator('available_copies')
     def validate_available_copies(cls, v, values):
@@ -32,8 +31,7 @@ class BookCreateRequest(BaseModel):
                 "author": "F. Scott Fitzgerald",
                 "isbn": "978-0-7432-7356-5",
                 "total_copies": 5,
-                "available_copies": 5,
-                "added_by": 1
+                "available_copies": 5
             }
         }
 

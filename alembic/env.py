@@ -10,7 +10,7 @@ from app.db.base import Base
 
 # import all model modules so their classes register on Base.metadata
 # ensure this imports every file that defines models (adjust names as needed)
-from app.models import book, borrow, member, librarian  # noqa: F401
+from app.models import book, borrow, member  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:

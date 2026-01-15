@@ -13,9 +13,6 @@ class Book(Base):
     total_copies = Column(Integer, default=1)
     available_copies = Column(Integer, default=1)
 
-    added_by = Column(Integer, ForeignKey("librarians.id"))
-
-    librarian = relationship("Librarian")
     borrows = relationship("BorrowTransaction", back_populates="book")
 
     def __repr__(self):

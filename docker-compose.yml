@@ -16,11 +16,11 @@ services:
       test: ["CMD-SHELL", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
       interval: 10s
       timeout: 10s
-      retries: 1
+      retries: 5
       start_period: 30s
 
   app:
-    build: ...
+    build: .
     depends_on:
       db:
         condition: service_healthy
@@ -34,8 +34,21 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./app:/app/app           # mount only source code if you need live edit
-      - ./alembic:/app/alembic   # ensure migrations and alembic.ini are present
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+      - ./app:/app/app           # mount source code for live edit
+      - ./alembic:/app/alembic   # ensure migrations are available
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_TARGET=http://app:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - app
+
 volumes:
   db_data:

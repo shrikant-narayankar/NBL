@@ -1,4 +1,4 @@
-from aiosqlite import IntegrityError
+from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
