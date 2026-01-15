@@ -36,9 +36,9 @@ const Home = () => {
                     api.getActiveBorrows()
                 ]);
                 setStats({
-                    books: b.length,
-                    members: m.length,
-                    activeBorrows: a.length
+                    books: b.total,
+                    members: m.total,
+                    activeBorrows: a.total
                 });
             } catch (e) {
                 console.error("Failed to load stats", e);
