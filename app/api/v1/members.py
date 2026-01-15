@@ -13,13 +13,45 @@ router = APIRouter()
 async def create_member(member: MemberCreate, db_session=Depends(get_db)):
     return await member_service.create_member(db_session, member)
 
-@router.get("/{member_id}/borrows", status_code=status.HTTP_200_OK, response_model=list[BorrowMemberResponse])
-async def get_member_borrows(member_id: int, status: Status = Status.all, db_session=Depends(get_db)):
-    return await member_service.get_member_borrows(db_session, member_id, status)
+from app.schemas.common import PaginatedResponse
+from fastapi import Query
+import math
 
-@router.get("/", status_code=status.HTTP_200_OK, response_model=list[MemberResponse])
-async def get_members(db_session=Depends(get_db)):
-    return await member_service.get_members(db_session)
+@router.get("/{member_id}/borrows", status_code=status.HTTP_200_OK, response_model=PaginatedResponse[BorrowMemberResponse])
+async def get_member_borrows(
+    member_id: int, 
+    status: Status = Status.all, 
+    db_session=Depends(get_db),
+    page: int = Query(1, ge=1),
+    size: int = Query(10, ge=1, le=100)
+):
+    skip = (page - 1) * size
+    items, total = await member_service.get_member_borrows(db_session, member_id, status, skip=skip, limit=size)
+    pages = math.ceil(total / size) if total > 0 else 0
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=page,
+        size=size,
+        pages=pages
+    )
+
+@router.get("/", status_code=status.HTTP_200_OK, response_model=PaginatedResponse[MemberResponse])
+async def get_members(
+    db_session=Depends(get_db),
+    page: int = Query(1, ge=1),
+    size: int = Query(10, ge=1, le=100)
+):
+    skip = (page - 1) * size
+    items, total = await member_service.get_members(db_session, skip=skip, limit=size)
+    pages = math.ceil(total / size) if total > 0 else 0
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=page,
+        size=size,
+        pages=pages
+    )
 
 @router.patch("/", status_code=status.HTTP_200_OK)
 async def update_member(member: MemberUpdate, db_session=Depends(get_db)):

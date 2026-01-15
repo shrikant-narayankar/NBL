@@ -2,29 +2,36 @@ import { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import Modal from '../components/Modal';
 import { Plus, User, Trash2 } from 'lucide-react';
+import Pagination from '../components/Pagination';
 
 const Members = () => {
     const [members, setMembers] = useState([]);
+    const [metadata, setMetadata] = useState({ total: 0, page: 1, size: 10, pages: 0 });
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({ name: '', email: '' });
 
-    const fetchMembers = async () => {
+    const fetchMembers = async (page = 1) => {
         try {
             setIsLoading(true);
-            const data = await api.getMembers();
-            setMembers(data);
+            const response = await api.getMembers(page);
+            setMembers(response.items);
+            setMetadata({
+                total: response.total,
+                page: response.page,
+                size: response.size,
+                pages: response.pages
+            });
         } catch (err) {
             console.error(err);
-            // alert('Failed to fetch members');
         } finally {
             setIsLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchMembers();
-    }, []);
+        fetchMembers(metadata.page);
+    }, [metadata.page]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -32,7 +39,7 @@ const Members = () => {
             await api.createMember(formData);
             setIsModalOpen(false);
             setFormData({ name: '', email: '' });
-            fetchMembers();
+            fetchMembers(1);
         } catch (err) {
             alert('Failed to create member: ' + err.message);
         }
@@ -42,7 +49,7 @@ const Members = () => {
         if (!confirm("Are you sure?")) return;
         try {
             await api.deleteMember(id);
-            fetchMembers();
+            fetchMembers(metadata.page);
         } catch (err) {
             alert("Failed to delete member: " + err.message);
         }
@@ -110,6 +117,12 @@ const Members = () => {
                             )}
                         </tbody>
                     </table>
+                    <Pagination
+                        page={metadata.page}
+                        pages={metadata.pages}
+                        total={metadata.total}
+                        onPageChange={(p) => setMetadata({ ...metadata, page: p })}
+                    />
                 </div>
             )}
 

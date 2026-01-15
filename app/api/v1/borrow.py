@@ -19,13 +19,27 @@ router = APIRouter()
 
 
 
-@router.get("/", status_code=status.HTTP_200_OK, response_model=list[Union[ActiveBorrowWithBook, ActiveBorrowWithMember, ActiveBorrowWithAll]])
+from app.schemas.common import PaginatedResponse
+import math
+
+@router.get("/", status_code=status.HTTP_200_OK, response_model=PaginatedResponse[Union[ActiveBorrowWithBook, ActiveBorrowWithMember, ActiveBorrowWithAll]])
 async def get_borrows(
     db_session=Depends(get_db),
     status: Status = Query(Status.all, description="Filter by status (borrowed, returned, all)"),
     include: Include = Query(Include.all, description="Include nested related data"),
+    page: int = Query(1, ge=1),
+    size: int = Query(10, ge=1, le=100)
 ):
-    return await borrow_service.list_borrows(db_session, status=status, include=include.value)
+    skip = (page - 1) * size
+    items, total = await borrow_service.list_borrows(db_session, status=status, include=include.value, skip=skip, limit=size)
+    pages = math.ceil(total / size) if total > 0 else 0
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=page,
+        size=size,
+        pages=pages
+    )
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def borrow_book(member: BorrowRequest,db_session=Depends(get_db)):
@@ -45,17 +59,25 @@ async def return_book(return_request: ReturnRequest, db_session=Depends(get_db))
 @router.get(
     "/active",
     status_code=status.HTTP_200_OK,
-    response_model=list[Union[ActiveBorrowWithBook, ActiveBorrowWithMember, ActiveBorrowWithAll]],
+    response_model=PaginatedResponse[Union[ActiveBorrowWithBook, ActiveBorrowWithMember, ActiveBorrowWithAll]],
 )
 async def get_active_borrows(
     db_session=Depends(get_db),
     include: Include = Query(Include.all, description="Include nested related data: 'book', 'member', or 'all'"),
+    page: int = Query(1, ge=1),
+    size: int = Query(10, ge=1, le=100)
 ):
-    """Return all currently borrowed (not-yet-returned) books.
-
-    Use the 'include' query parameter to control whether nested book/member objects are returned.
-    """
-    return await borrow_service.list_active_borrows(db_session, include=include.value)
+    """Return all currently borrowed (not-yet-returned) books."""
+    skip = (page - 1) * size
+    items, total = await borrow_service.list_active_borrows(db_session, include=include.value, skip=skip, limit=size)
+    pages = math.ceil(total / size) if total > 0 else 0
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=page,
+        size=size,
+        pages=pages
+    )
 
 
 @router.delete("/{borrow_id}", status_code=status.HTTP_204_NO_CONTENT)

@@ -8,8 +8,8 @@ async def create_book(db: AsyncSession, book: BookCreateRequest):
     return await create(db, book=book)
 
 
-async def get_all_books(db: AsyncSession):
-    return await get_books(db)
+async def get_all_books(db: AsyncSession, skip: int = 0, limit: int = 10):
+    return await get_books(db, skip=skip, limit=limit)
 
 
 async def update_book(db: AsyncSession, book_id: int, book_update: BookUpdateRequest):

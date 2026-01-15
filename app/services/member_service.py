@@ -5,13 +5,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 async def create_member(db: AsyncSession, member: MemberCreate):
     return await create(db, member=member)
 
-async def get_member_borrows(db: AsyncSession, member_id: int, status):
+async def get_member_borrows(db: AsyncSession, member_id: int, status, skip: int = 0, limit: int = 10):
     from app.crud.borrow_crud import get_borrows_by_member
-    return await get_borrows_by_member(db, member_id, status)
+    return await get_borrows_by_member(db, member_id, status, skip=skip, limit=limit)
 
-async def get_members(db: AsyncSession):
+async def get_members(db: AsyncSession, skip: int = 0, limit: int = 10):
     from app.crud.members_crud import get_all_members
-    return await get_all_members(db)
+    return await get_all_members(db, skip=skip, limit=limit)
 
 
 async def delete_member(db: AsyncSession, member_id: int):

@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import Modal from '../components/Modal';
-import { Plus, Search, BookOpen, Trash2 } from 'lucide-react';
+import { Plus, BookOpen, Trash2 } from 'lucide-react';
+import Pagination from '../components/Pagination';
 
 const Books = () => {
     const [books, setBooks] = useState([]);
+    const [metadata, setMetadata] = useState({ total: 0, page: 1, size: 10, pages: 0 });
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({
@@ -16,11 +18,17 @@ const Books = () => {
     });
     const [error, setError] = useState(null);
 
-    const fetchBooks = async () => {
+    const fetchBooks = async (page = 1) => {
         try {
             setIsLoading(true);
-            const data = await api.getBooks();
-            setBooks(data);
+            const response = await api.getBooks(page);
+            setBooks(response.items);
+            setMetadata({
+                total: response.total,
+                page: response.page,
+                size: response.size,
+                pages: response.pages
+            });
         } catch (err) {
             console.error(err);
             setError('Failed to fetch books');
@@ -30,8 +38,8 @@ const Books = () => {
     };
 
     useEffect(() => {
-        fetchBooks();
-    }, []);
+        fetchBooks(metadata.page);
+    }, [metadata.page]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -136,6 +144,12 @@ const Books = () => {
                             )}
                         </tbody>
                     </table>
+                    <Pagination
+                        page={metadata.page}
+                        pages={metadata.pages}
+                        total={metadata.total}
+                        onPageChange={(p) => setMetadata({ ...metadata, page: p })}
+                    />
                 </div>
             )}
 

@@ -17,11 +17,17 @@ async def get_by_id(db: AsyncSession, member_id: int) -> Member | None:
     )
     return result.scalars().first()
 
-async def get_all_members(db: AsyncSession):
+from sqlalchemy import func
+
+async def get_all_members(db: AsyncSession, skip: int = 0, limit: int = 10):
+    total_result = await db.execute(select(func.count()).select_from(Member))
+    total = total_result.scalar()
+
     result = await db.execute(
-        select(Member)
+        select(Member).offset(skip).limit(limit)
     )
-    return result.scalars().all()
+    items = result.scalars().all()
+    return items, total
 
 
 async def delete_by_id(db: AsyncSession, member_id: int) -> Member | None:

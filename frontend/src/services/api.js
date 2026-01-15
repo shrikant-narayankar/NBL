@@ -12,7 +12,7 @@ const handleResponse = async (response) => {
 
 export const api = {
     // Books
-    getBooks: () => fetch(`${API_BASE}/books/`).then(handleResponse),
+    getBooks: (page = 1, size = 10) => fetch(`${API_BASE}/books/?page=${page}&size=${size}`).then(handleResponse),
     createBook: (book) =>
         fetch(`${API_BASE}/books/`, {
             method: 'POST',
@@ -29,22 +29,22 @@ export const api = {
         fetch(`${API_BASE}/books/${id}`, { method: 'DELETE' }).then(handleResponse),
 
     // Members
-    getMembers: () => fetch(`${API_BASE}/members/`).then(handleResponse),
+    getMembers: (page = 1, size = 10) => fetch(`${API_BASE}/members/?page=${page}&size=${size}`).then(handleResponse),
     createMember: (member) =>
         fetch(`${API_BASE}/members/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(member),
         }).then(handleResponse),
-    getMemberBorrows: (id) => fetch(`${API_BASE}/members/${id}/borrows`).then(handleResponse),
+    getMemberBorrows: (id, page = 1, size = 10) => fetch(`${API_BASE}/members/${id}/borrows?page=${page}&size=${size}`).then(handleResponse),
     deleteMember: (id) =>
         fetch(`${API_BASE}/members/${id}`, { method: 'DELETE' }).then(handleResponse),
 
     // Borrow
-    getActiveBorrows: (include = 'all') =>
-        fetch(`${API_BASE}/borrow/active?include=${include}`).then(handleResponse),
-    getBorrows: (status = 'all', include = 'all') =>
-        fetch(`${API_BASE}/borrow/?status=${status}&include=${include}`).then(handleResponse),
+    getActiveBorrows: (include = 'all', page = 1, size = 10) =>
+        fetch(`${API_BASE}/borrow/active?include=${include}&page=${page}&size=${size}`).then(handleResponse),
+    getBorrows: (status = 'all', include = 'all', page = 1, size = 10) =>
+        fetch(`${API_BASE}/borrow/?status=${status}&include=${include}&page=${page}&size=${size}`).then(handleResponse),
     borrowBook: (data) =>
         fetch(`${API_BASE}/borrow/`, {
             method: 'POST',

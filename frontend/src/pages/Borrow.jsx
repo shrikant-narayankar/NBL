@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { api } from '../services/api';
-import Select from 'react-select'; // npm install react-select
+import Select from 'react-select';
 import Modal from '../components/Modal';
 import { Repeat, CheckCircle, AlertCircle } from 'lucide-react';
+import Pagination from '../components/Pagination';
 
 const Borrow = () => {
     const [activeBorrows, setActiveBorrows] = useState([]);
     const [statusFilter, setStatusFilter] = useState('borrowed'); // 'borrowed' | 'returned' | 'all'
+    const [metadata, setMetadata] = useState({ total: 0, page: 1, size: 10, pages: 0 });
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -21,11 +23,17 @@ const Borrow = () => {
         due_date: ''
     });
 
-    const fetchData = async () => {
+    const fetchData = async (page = 1) => {
         try {
             setIsLoading(true);
-            const borrows = await api.getBorrows(statusFilter, 'all');
-            setActiveBorrows(borrows);
+            const response = await api.getBorrows(statusFilter, 'all', page);
+            setActiveBorrows(response.items);
+            setMetadata({
+                total: response.total,
+                page: response.page,
+                size: response.size,
+                pages: response.pages
+            });
         } catch (err) {
             console.error(err);
         } finally {
@@ -35,9 +43,14 @@ const Borrow = () => {
 
     const fetchFormResources = async () => {
         try {
-            const [m, b] = await Promise.all([api.getMembers(), api.getBooks()]);
-            setMembers(m);
-            setBooks(b);
+            // Fetch first page of members and books for the search dropdowns
+            // In a real app with large data, we'd use async-select for react-select
+            const [mResponse, bResponse] = await Promise.all([
+                api.getMembers(1, 100),
+                api.getBooks(1, 100)
+            ]);
+            setMembers(mResponse.items);
+            setBooks(bResponse.items);
         } catch (e) {
             console.error(e);
             alert("Failed to load members or books");
@@ -45,7 +58,12 @@ const Borrow = () => {
     }
 
     useEffect(() => {
-        fetchData();
+        fetchData(metadata.page);
+    }, [statusFilter, metadata.page]);
+
+    // Reset page when filter changes
+    useEffect(() => {
+        setMetadata(m => ({ ...m, page: 1 }));
     }, [statusFilter]);
 
     // Load resources when modal opens
@@ -70,7 +88,7 @@ const Borrow = () => {
                 borrowed_date: new Date().toISOString().split('T')[0],
                 due_date: ''
             });
-            fetchData();
+            fetchData(1);
         } catch (err) {
             alert('Failed to borrow book: ' + err.message);
         }
@@ -84,7 +102,7 @@ const Borrow = () => {
                 member_id: borrow.member_id,
                 returned_date: new Date().toISOString().split('T')[0]
             });
-            fetchData();
+            fetchData(metadata.page);
         } catch (err) {
             alert("Failed to return book: " + err.message);
         }
@@ -145,8 +163,8 @@ const Borrow = () => {
                         <tbody>
                             {activeBorrows.length === 0 ? (
                                 <tr>
-                                    <td colSpan="5" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                                        No active borrows.
+                                    <td colSpan="6" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                        No borrow records found.
                                     </td>
                                 </tr>
                             ) : (
@@ -190,6 +208,12 @@ const Borrow = () => {
                             )}
                         </tbody>
                     </table>
+                    <Pagination
+                        page={metadata.page}
+                        pages={metadata.pages}
+                        total={metadata.total}
+                        onPageChange={(p) => setMetadata({ ...metadata, page: p })}
+                    />
                 </div>
             )}
 

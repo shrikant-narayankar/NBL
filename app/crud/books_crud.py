@@ -38,11 +38,17 @@ async def get_by_isbn(db: AsyncSession, isbn: str) -> Book | None:
     )
     return result.scalar_one_or_none()
 
-async def get_books(db: AsyncSession) -> Book | None:
+from sqlalchemy import func
+
+async def get_books(db: AsyncSession, skip: int = 0, limit: int = 10):
+    total_result = await db.execute(select(func.count()).select_from(Book))
+    total = total_result.scalar()
+
     result = await db.execute(
-        select(Book)
+        select(Book).offset(skip).limit(limit)
     )
-    return result.scalars().all()
+    items = result.scalars().all()
+    return items, total
 
 async def update(db: AsyncSession, book: Book) -> Book:
     await db.commit()

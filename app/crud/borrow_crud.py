@@ -31,15 +31,22 @@ async def update(db: AsyncSession, db_borrow: BorrowTransaction) -> BorrowTransa
     await db.refresh(db_borrow)
     return db_borrow
 
-async def get_borrows_by_member(db: AsyncSession, member_id: int, status:Status):
-    query = select(BorrowTransaction).where(BorrowTransaction.member_id == member_id).options(selectinload(BorrowTransaction.book))
+from sqlalchemy import func
+
+async def get_borrows_by_member(db: AsyncSession, member_id: int, status: Status, skip: int = 0, limit: int = 10):
+    query = select(BorrowTransaction).where(BorrowTransaction.member_id == member_id)
     if status == Status.borrowed:
         query = query.where(BorrowTransaction.returned_date == None)
     elif status == Status.returned:
         query = query.where(BorrowTransaction.returned_date != None)
+    
+    total_result = await db.execute(select(func.count()).select_from(query.alias()))
+    total = total_result.scalar()
+
+    query = query.options(selectinload(BorrowTransaction.book)).offset(skip).limit(limit)
     result = await db.execute(query)
-    borrows = result.scalars().all()
-    return borrows
+    items = result.scalars().all()
+    return items, total
 
 
 async def delete_by_id(db: AsyncSession, borrow_id: int):
@@ -52,7 +59,7 @@ async def delete_by_id(db: AsyncSession, borrow_id: int):
     return borrow
 
 
-async def get_all_borrows(db: AsyncSession, status: Status, include: str = "all"):
+async def get_all_borrows(db: AsyncSession, status: Status, include: str = "all", skip: int = 0, limit: int = 10):
     """Generic fetch for borrows based on status."""
     query = select(BorrowTransaction)
     
@@ -60,7 +67,9 @@ async def get_all_borrows(db: AsyncSession, status: Status, include: str = "all"
         query = query.where(BorrowTransaction.returned_date == None)
     elif status == Status.returned:
         query = query.where(BorrowTransaction.returned_date != None)
-    # if Status.all, no filter on returned_date
+    
+    total_result = await db.execute(select(func.count()).select_from(query.alias()))
+    total = total_result.scalar()
 
     options = []
     if include == "book":
@@ -73,14 +82,15 @@ async def get_all_borrows(db: AsyncSession, status: Status, include: str = "all"
             selectinload(BorrowTransaction.member),
         ])
 
-    query = query.options(*options)
+    query = query.options(*options).offset(skip).limit(limit)
     result = await db.execute(query)
-    return result.scalars().all()
+    items = result.scalars().all()
+    return items, total
 
 
-async def get_active_borrows(db: AsyncSession, include: str = "all"):
-    return await get_all_borrows(db, status=Status.borrowed, include=include)
+async def get_active_borrows(db: AsyncSession, include: str = "all", skip: int = 0, limit: int = 10):
+    return await get_all_borrows(db, status=Status.borrowed, include=include, skip=skip, limit=limit)
 
 
-async def get_history_borrows(db: AsyncSession, include: str = "all"):
-    return await get_all_borrows(db, status=Status.returned, include=include)
+async def get_history_borrows(db: AsyncSession, include: str = "all", skip: int = 0, limit: int = 10):
+    return await get_all_borrows(db, status=Status.returned, include=include, skip=skip, limit=limit)
