@@ -1,21 +1,20 @@
 import { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { Book, Users, Repeat } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import '../styles/PageLayout.css';
 
 const Card = ({ title, count, icon: Icon, color }) => (
-    <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-        <div style={{
-            width: '60px', height: '60px',
-            borderRadius: '50%',
+    <div className="card stat-card-content">
+        <div className="stat-icon" style={{
             background: `rgba(${color}, 0.1)`,
-            color: `rgb(${color})`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
+            color: `rgb(${color})`
         }}>
             <Icon size={30} />
         </div>
-        <div>
-            <h3 style={{ color: 'var(--text-muted)', marginBottom: '0.25rem', fontSize: '0.875rem' }}>{title}</h3>
-            <p style={{ fontSize: '2rem', fontWeight: 'bold' }}>{count}</p>
+        <div className="stat-info">
+            <h3>{title}</h3>
+            <p>{count}</p>
         </div>
     </div>
 )
@@ -49,18 +48,30 @@ const Home = () => {
 
     return (
         <div>
-            <h1 style={{ marginBottom: '2rem', fontSize: '2rem' }}>Dashboard</h1>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+            <div className="page-header">
+                <div className="page-title-group">
+                    <h1>Dashboard</h1>
+                    <p>Overview of library activity</p>
+                </div>
+            </div>
+
+            <div className="dashboard-grid">
                 <Card title="Total Books" count={stats.books} icon={Book} color="100, 100, 255" />
                 <Card title="Active Members" count={stats.members} icon={Users} color="255, 165, 0" />
                 <Card title="Books Borrowed" count={stats.activeBorrows} icon={Repeat} color="46, 204, 113" />
             </div>
 
-            <div style={{ marginTop: '3rem' }}>
-                <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem' }}>Quick Actions</h2>
-                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                    <a href="/books" className="card" style={{ padding: '1rem 2rem', fontWeight: 600, color: 'var(--color-primary)' }}>Manage Books &rarr;</a>
-                    <a href="/borrow/issue" className="card" style={{ padding: '1rem 2rem', fontWeight: 600, color: 'var(--color-primary)' }}>Issue a Book &rarr;</a>
+            <div className="quick-actions-container">
+                <h2 style={{ marginBottom: '1.5rem', fontSize: '1.25rem', color: 'var(--text-muted)' }}>Quick Actions</h2>
+                <div className="quick-actions-grid">
+                    <Link to="/books" className="card action-card">
+                        <span>Manage Books</span>
+                        <Book size={20} />
+                    </Link>
+                    <Link to="/borrow/issue" className="card action-card">
+                        <span>Issue a Book</span>
+                        <Repeat size={20} />
+                    </Link>
                 </div>
             </div>
         </div>

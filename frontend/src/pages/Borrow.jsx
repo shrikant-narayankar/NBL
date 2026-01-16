@@ -4,6 +4,7 @@ import { api } from '../services/api';
 import { Repeat, CheckCircle, AlertCircle } from 'lucide-react';
 import DataTable from '../components/DataTable';
 import { useNotification } from '../context/NotificationContext';
+import '../styles/PageLayout.css';
 
 const Borrow = () => {
     const { success, error, confirm } = useNotification();
@@ -77,7 +78,7 @@ const Borrow = () => {
     const columns = [
         {
             header: 'Book',
-            render: (b) => <span style={{ fontWeight: 500 }}>{b.book?.title || 'Unknown Book'}</span>
+            render: (b) => <span className="text-bold">{b.book?.title || 'Unknown Book'}</span>
         },
         {
             header: 'Member',
@@ -121,18 +122,18 @@ const Borrow = () => {
 
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <div>
-                    <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Borrowing</h1>
-                    <p style={{ color: 'var(--text-muted)' }}>Manage book circulation</p>
+            <div className="page-header">
+                <div className="page-title-group">
+                    <h1>Borrowing</h1>
+                    <p>Manage book circulation</p>
                 </div>
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--bg-card)', padding: '0.25rem 0.75rem', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
+                <div className="controls-container">
+                    <div className="filter-group">
                         <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: 500 }}>Sort by:</span>
                         <select
                             value={sortConfig.key}
                             onChange={(e) => setSortConfig({ ...sortConfig, key: e.target.value })}
-                            style={{ border: 'none', background: 'transparent', width: 'auto', padding: '0.25rem', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-primary)' }}
+                            className="sort-select"
                         >
                             <option value="borrowed_date">Borrowed Date</option>
                             <option value="due_date">Due Date</option>
@@ -141,29 +142,19 @@ const Borrow = () => {
                         </select>
                         <button
                             onClick={() => setSortConfig({ ...sortConfig, order: sortConfig.order === 'asc' ? 'desc' : 'asc' })}
-                            style={{ padding: '0.25rem', borderRadius: '4px', backgroundColor: 'rgba(0,0,0,0.05)', display: 'flex' }}
+                            className="sort-btn"
                             title={sortConfig.order === 'asc' ? 'Ascending' : 'Descending'}
                         >
                             <span style={{ fontSize: '0.75rem' }}>{sortConfig.order === 'asc' ? '↑' : '↓'}</span>
                         </button>
                     </div>
 
-                    <div style={{ display: 'flex', backgroundColor: 'var(--bg-card)', borderRadius: 'var(--radius)', border: '1px solid var(--border)', padding: '0.25rem', gap: '0.25rem' }}>
+                    <div className="status-toggle-group">
                         {['borrowed', 'returned', 'all'].map((status) => (
                             <button
                                 key={status}
                                 onClick={() => setStatusFilter(status)}
-                                style={{
-                                    padding: '0.5rem 1rem',
-                                    borderRadius: 'calc(var(--radius) - 2px)',
-                                    border: 'none',
-                                    backgroundColor: statusFilter === status ? 'var(--color-primary)' : 'transparent',
-                                    color: statusFilter === status ? '#fff' : 'var(--text-muted)',
-                                    cursor: 'pointer',
-                                    fontWeight: 500,
-                                    fontSize: '0.875rem',
-                                    textTransform: 'capitalize'
-                                }}
+                                className={`status-toggle-btn ${statusFilter === status ? 'active' : ''}`}
                             >
                                 {status === 'borrowed' ? 'Active' : status === 'returned' ? 'History' : 'All'}
                             </button>

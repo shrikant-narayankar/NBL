@@ -4,6 +4,7 @@ import DataTable from '../components/DataTable';
 import FormModal from '../components/FormModal';
 import { Plus, BookOpen, Trash2 } from 'lucide-react';
 import { useNotification } from '../context/NotificationContext';
+import '../styles/PageLayout.css';
 
 const Books = () => {
     const { success, error, confirm } = useNotification();
@@ -22,8 +23,6 @@ const Books = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [editBookId, setEditBookId] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    // deletingId is local to the row render in the old code, but with DataTable we pass the state down or handle it in render.
-    // For simplicity in DataTable render prop, accessing component state is fine.
     const [deletingId, setDeletingId] = useState(null);
 
     const fetchBooks = async (page = 1, q = searchQuery) => {
@@ -146,17 +145,11 @@ const Books = () => {
         {
             header: 'Title',
             render: (book) => (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{
-                        width: '40px', height: '40px',
-                        background: 'var(--color-primary)',
-                        borderRadius: '8px',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        color: 'white', opacity: 0.8
-                    }}>
+                <div className="item-flex-row">
+                    <div className="item-icon-box">
                         <BookOpen size={20} />
                     </div>
-                    <span style={{ fontWeight: 500 }}>{book.title}</span>
+                    <span className="text-bold">{book.title}</span>
                 </div>
             )
         },
@@ -169,13 +162,7 @@ const Books = () => {
         {
             header: 'Copies',
             render: (book) => (
-                <span style={{
-                    padding: '0.25rem 0.75rem',
-                    borderRadius: '999px',
-                    backgroundColor: book.available_copies > 0 ? 'rgba(0, 200, 0, 0.1)' : 'rgba(200, 0, 0, 0.1)',
-                    color: book.available_copies > 0 ? 'green' : 'red',
-                    fontSize: '0.875rem'
-                }}>
+                <span className={`item-pk-badge ${book.available_copies > 0 ? 'success' : 'danger'}`}>
                     {book.available_copies} / {book.total_copies}
                 </span>
             )
@@ -183,7 +170,7 @@ const Books = () => {
         {
             header: 'Actions',
             render: (book) => (
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div className="item-actions">
                     <button className="btn-ghost" onClick={() => handleEdit(book)} title="Edit Book" style={{ color: 'var(--color-primary)' }}>
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                     </button>
@@ -207,27 +194,21 @@ const Books = () => {
 
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <div>
-                    <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Books</h1>
-                    <p style={{ color: 'var(--text-muted)' }}>Manage your library collection</p>
+            <div className="page-header">
+                <div className="page-title-group">
+                    <h1>Books</h1>
+                    <p>Manage your library collection</p>
                 </div>
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    <div style={{ position: 'relative' }}>
+                <div className="controls-container">
+                    <div className="search-container">
                         <input
                             type="text"
                             placeholder="Search by title or author..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            style={{
-                                padding: '0.6rem 1rem',
-                                paddingLeft: '2.5rem',
-                                borderRadius: 'var(--radius-md)',
-                                width: '300px',
-                                fontSize: '0.875rem'
-                            }}
+                            className="search-input"
                         />
-                        <div style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
+                        <div className="search-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                         </div>
                     </div>
@@ -259,8 +240,8 @@ const Books = () => {
                 isSubmitting={isSubmitting}
                 submitLabel={isEditing ? 'Update Book' : 'Create Book'}
             >
-                <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>Title</label>
+                <div className="form-group">
+                    <label className="form-label">Title</label>
                     <input
                         required
                         value={formData.title}
@@ -268,8 +249,8 @@ const Books = () => {
                         placeholder="The Great Gatsby"
                     />
                 </div>
-                <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>Author</label>
+                <div className="form-group">
+                    <label className="form-label">Author</label>
                     <input
                         required
                         value={formData.author}
@@ -277,8 +258,8 @@ const Books = () => {
                         placeholder="F. Scott Fitzgerald"
                     />
                 </div>
-                <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>ISBN</label>
+                <div className="form-group">
+                    <label className="form-label">ISBN</label>
                     <input
                         required
                         value={formData.isbn}
@@ -286,9 +267,9 @@ const Books = () => {
                         placeholder="978-0-7432-7356-5"
                     />
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-row">
                     <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>Total Copies</label>
+                        <label className="form-label">Total Copies</label>
                         <input
                             type="number"
                             min="1"
@@ -306,7 +287,7 @@ const Books = () => {
                     </div>
                     {isEditing && (
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>Available Copies</label>
+                            <label className="form-label">Available Copies</label>
                             <input
                                 type="number"
                                 min="0"

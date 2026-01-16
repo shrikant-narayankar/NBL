@@ -4,6 +4,7 @@ import { api } from '../services/api';
 import Select from 'react-select';
 import { Repeat, ArrowLeft } from 'lucide-react';
 import { useNotification } from '../context/NotificationContext';
+import '../styles/PageLayout.css';
 
 const IssueBook = () => {
     const { success, error } = useNotification();
@@ -29,7 +30,7 @@ const IssueBook = () => {
                 setMembers(mResponse.items);
                 setBooks(bResponse.items);
             } catch (e) {
-                console.error(e);
+                // Centralized error handling
             }
         };
         fetchResources();
@@ -63,7 +64,7 @@ const IssueBook = () => {
             success('Book issued successfully!');
             navigate('/borrow');
         } catch (err) {
-            console.error(err);
+            // Centralized error handling
         } finally {
             setIsLoading(false);
         }
@@ -71,7 +72,7 @@ const IssueBook = () => {
 
     return (
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+            <div className="page-header" style={{ justifyContent: 'flex-start', gap: '1rem' }}>
                 <button
                     onClick={() => navigate(-1)}
                     className="btn-ghost"
@@ -79,17 +80,17 @@ const IssueBook = () => {
                 >
                     <ArrowLeft size={24} />
                 </button>
-                <div>
-                    <h1 style={{ fontSize: '2rem', marginBottom: '0.25rem' }}>Issue a Book</h1>
-                    <p style={{ color: 'var(--text-muted)' }}>Register a new borrowing record for a member</p>
+                <div className="page-title-group">
+                    <h1>Issue a Book</h1>
+                    <p>Register a new borrowing record for a member</p>
                 </div>
             </div>
 
             <div className="card" style={{ padding: '2rem' }}>
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.875rem' }}>Select Member</label>
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label className="form-label">Select Member</label>
                             <Select
                                 options={members.map(m => ({ value: m.id, label: `${m.name} (#${m.id})` }))}
                                 onChange={(option) => setFormData({ ...formData, member_id: option.value })}
@@ -105,7 +106,7 @@ const IssueBook = () => {
                                     control: (base) => ({
                                         ...base,
                                         borderRadius: '8px',
-                                        borderColor: 'var(--border)',
+                                        borderColor: '#e2e8f0',
                                         padding: '2px',
                                         '&:hover': { borderColor: 'var(--color-primary)' }
                                     })
@@ -113,8 +114,8 @@ const IssueBook = () => {
                             />
                         </div>
 
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.875rem' }}>Select Book</label>
+                        <div className="form-group">
+                            <label className="form-label">Select Book</label>
                             <Select
                                 options={books.map(b => ({
                                     value: b.id,
@@ -138,7 +139,7 @@ const IssueBook = () => {
                                     control: (base) => ({
                                         ...base,
                                         borderRadius: '8px',
-                                        borderColor: 'var(--border)',
+                                        borderColor: '#e2e8f0',
                                         padding: '2px',
                                         '&:hover': { borderColor: 'var(--color-primary)' }
                                     })
@@ -147,30 +148,28 @@ const IssueBook = () => {
                         </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.875rem' }}>Borrowed Date</label>
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label className="form-label">Borrowed Date</label>
                             <input
                                 type="date"
                                 required
                                 value={formData.borrowed_date}
                                 onChange={e => setFormData({ ...formData, borrowed_date: e.target.value })}
-                                style={{ width: '100%' }}
                             />
                         </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.875rem' }}>Due Date</label>
+                        <div className="form-group">
+                            <label className="form-label">Due Date</label>
                             <input
                                 type="date"
                                 required
                                 value={formData.due_date}
                                 onChange={e => setFormData({ ...formData, due_date: e.target.value })}
-                                style={{ width: '100%' }}
                             />
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem', borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem' }}>
                         <button
                             type="button"
                             className="btn btn-ghost"
