@@ -12,23 +12,54 @@ A web application for sharing and borrowing books within a neighbourhood.
 - [Node.js 18+](https://nodejs.org/)
 - [PostgreSQL](https://www.postgresql.org/) (for manual setup)
 
-## Method 1: Quick Start (Docker Compose)
+## Quick Start (Makefile)
 
-The easiest way to run the entire stack (Database, Backend, Frontend) is using Docker Compose.
+The project includes a `Makefile` to simplify common tasks.
 
-1.  Make sure Docker is running.
-2.  Run the following command in the project root:
-
+1.  **Run the Application**:
+    This command will build and start the entire stack (Database, Backend, Frontend) using Docker Compose.
     ```bash
-    docker-compose up --build
+    make run
     ```
 
-3.  Access the application:
     - Frontend: `http://localhost:5173`
     - Backend API Docs: `http://localhost:8000/docs`
 
-4.  **Populate Sample Data** (Optional):
-    In a new terminal, run from the project root:
+
+2.  **Stop the Application**:
+    This stops the containers and removes them.
     ```bash
-    ./populate_data.sh
+    make stop
     ```
+
+3.  **Run Tests**:
+    You can run tests locally (requires python venv) or inside a Docker container.
+
+    - **Local**:
+      ```bash
+      make test
+      ```
+    - **Docker**:
+      ```bash
+      make test-docker
+      ```
+
+4.  **Populate Sample Data**:
+    After the app is running (step 1), you can populate it with sample data:
+    ```bash
+    make populate
+    ```
+
+5.  **Clean Up**:
+    Remove temporary files.
+    ```bash
+    make clean
+    ```
+
+## Project Structure
+
+- `backend/`: FastAPI application, tests, and database migrations.
+- `frontend/`: React/Vite frontend application.
+- `Makefile`: Command-line shortcuts.
+- `docker-compose.yml`: Docker services orchestration.
+

@@ -20,7 +20,7 @@ services:
       start_period: 30s
 
   app:
-    build: .
+    build: ./backend
     depends_on:
       db:
         condition: service_healthy
@@ -34,8 +34,8 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./app:/app/app           # mount source code for live edit
-      - ./alembic:/app/alembic   # ensure migrations are available
+      - ./backend/app:/app/app           # mount source code for live edit
+      - ./backend/alembic:/app/alembic   # ensure migrations are available
     command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
   frontend:
@@ -49,6 +49,12 @@ services:
       - /app/node_modules
     depends_on:
       - app
+
+  tests:
+    build: ./backend
+    user: root
+    volumes:
+      - ./backend:/app
 
 volumes:
   db_data:
