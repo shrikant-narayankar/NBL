@@ -30,7 +30,6 @@ const IssueBook = () => {
                 setBooks(bResponse.items);
             } catch (e) {
                 console.error(e);
-                error("Failed to load members or books");
             }
         };
         fetchResources();
@@ -38,6 +37,22 @@ const IssueBook = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!formData.member_id || !formData.book_id) {
+            error("Please select both a member and a book.");
+            return;
+        }
+
+        if (!formData.borrowed_date || !formData.due_date) {
+            error("Please select both borrowed and due dates.");
+            return;
+        }
+
+        if (new Date(formData.due_date) <= new Date(formData.borrowed_date)) {
+            error("Due date must be after the borrowed date.");
+            return;
+        }
+
         setIsLoading(true);
         try {
             await api.borrowBook({
@@ -48,7 +63,7 @@ const IssueBook = () => {
             success('Book issued successfully!');
             navigate('/borrow');
         } catch (err) {
-            error('Failed to borrow book: ' + err.message);
+            console.error(err);
         } finally {
             setIsLoading(false);
         }

@@ -14,6 +14,7 @@ const Borrow = () => {
     const [metadata, setMetadata] = useState({ total: 0, page: 1, size: 10, pages: 0 });
     const [isLoading, setIsLoading] = useState(true);
     const [sortConfig, setSortConfig] = useState({ key: 'borrowed_date', order: 'desc' });
+    const [returningId, setReturningId] = useState(null);
 
     const fetchData = async (page = 1) => {
         try {
@@ -52,6 +53,7 @@ const Borrow = () => {
         const confirmed = await confirm(`Are you sure you want to return "${borrow.book.title}" from ${borrow.member.name}?`);
         if (!confirmed) return;
         try {
+            setReturningId(borrow.id);
             await api.returnBook({
                 book_id: borrow.book_id,
                 member_id: borrow.member_id,
@@ -60,7 +62,9 @@ const Borrow = () => {
             fetchData(metadata.page);
             success("Book returned successfully!");
         } catch (err) {
-            error("Failed to return book: " + err.message);
+            console.error(err);
+        } finally {
+            setReturningId(null);
         }
     }
 
@@ -173,9 +177,14 @@ const Borrow = () => {
                                             )}
                                             <td style={{ padding: '1rem' }}>
                                                 {!borrow.returned_date && (
-                                                    <button className="btn btn-ghost" onClick={() => handleReturn(borrow)} style={{ color: 'green', gap: '0.25rem' }}>
+                                                    <button
+                                                        className="btn btn-ghost"
+                                                        onClick={() => handleReturn(borrow)}
+                                                        style={{ color: 'green', gap: '0.25rem' }}
+                                                        disabled={returningId === borrow.id}
+                                                    >
                                                         <CheckCircle size={18} />
-                                                        Return
+                                                        {returningId === borrow.id ? 'Returning...' : 'Return'}
                                                     </button>
                                                 )}
                                             </td>

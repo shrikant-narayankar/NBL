@@ -1,6 +1,6 @@
 frontend
 Please find the frontend code review feedback below. Kindly incorporate the required changes and share the updated submission.  
-Edit flows for Books and Members are not implemented at the UI level, even though update APIs exist. These are mandatory functional gaps.
+
 Custom input validation is missing (e.g., trimming whitespace, blocking empty values), action buttons are not disabled during API calls, and API error states are not consistently handled or displayed.
 API error handling is implemented only at the component level. There is no centralized API error handling (e.g., interceptor or shared wrapper), leading to duplicated logic and inconsistent error management across the application.
 Tables and create/edit modals are implemented repeatedly across entities, impacting maintainability. Consider refactoring them into reusable components (e.g., Reusable DataTable, Reusable modal/dialogs) and apply them consistently across all relevant flows.

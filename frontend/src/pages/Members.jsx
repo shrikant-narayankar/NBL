@@ -14,6 +14,8 @@ const Members = () => {
     const [formData, setFormData] = useState({ name: '', email: '' });
     const [isEditing, setIsEditing] = useState(false);
     const [editMemberId, setEditMemberId] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [deletingId, setDeletingId] = useState(null);
 
     const fetchMembers = async (page = 1) => {
         try {
@@ -39,11 +41,24 @@ const Members = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Trim and validate
+        const cleanData = {
+            name: formData.name.trim(),
+            email: formData.email.trim()
+        };
+
+        if (!cleanData.name || !cleanData.email) {
+            error("Please fill in all required fields.");
+            return;
+        }
+
         try {
+            setIsSubmitting(true);
             if (isEditing) {
-                await api.updateMember(editMemberId, formData);
+                await api.updateMember(editMemberId, cleanData);
             } else {
-                await api.createMember(formData);
+                await api.createMember(cleanData);
             }
             setIsModalOpen(false);
             setFormData({ name: '', email: '' });
@@ -52,7 +67,9 @@ const Members = () => {
             fetchMembers(metadata.page);
             success(`Member ${isEditing ? 'updated' : 'registered'} successfully!`);
         } catch (err) {
-            error(`Failed to ${isEditing ? 'update' : 'register'} member: ` + err.message);
+            console.error(err);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -74,11 +91,14 @@ const Members = () => {
         const confirmed = await confirm("Are you sure you want to delete this member?");
         if (!confirmed) return;
         try {
+            setDeletingId(id);
             await api.deleteMember(id);
             fetchMembers(metadata.page);
             success("Member deleted successfully!");
         } catch (err) {
-            error("Failed to delete member: " + err.message);
+            console.error(err);
+        } finally {
+            setDeletingId(null);
         }
     }
 
@@ -139,8 +159,17 @@ const Members = () => {
                                                 <button className="btn-ghost" onClick={() => handleEdit(member)} title="Edit Member" style={{ color: 'var(--color-primary)' }}>
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                                 </button>
-                                                <button className="btn-ghost" onClick={() => handleDelete(member.id)} style={{ color: 'red' }}>
-                                                    <Trash2 size={18} />
+                                                <button
+                                                    className="btn-ghost"
+                                                    onClick={() => handleDelete(member.id)}
+                                                    style={{ color: 'red', opacity: deletingId === member.id ? 0.5 : 1 }}
+                                                    disabled={deletingId === member.id}
+                                                >
+                                                    {deletingId === member.id ? (
+                                                        <div style={{ width: 18, height: 18, border: '2px solid red', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                                                    ) : (
+                                                        <Trash2 size={18} />
+                                                    )}
                                                 </button>
                                             </div>
                                         </td>
@@ -181,8 +210,10 @@ const Members = () => {
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
-                        <button type="button" className="btn btn-ghost" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                        <button type="submit" className="btn btn-primary">{isEditing ? 'Update' : 'Register'}</button>
+                        <button type="button" className="btn btn-ghost" onClick={() => setIsModalOpen(false)} disabled={isSubmitting}>Cancel</button>
+                        <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+                            {isSubmitting ? 'Saving...' : (isEditing ? 'Update' : 'Register')}
+                        </button>
                     </div>
                 </form>
             </Modal>

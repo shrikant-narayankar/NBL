@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import NotificationDialog from '../components/NotificationDialog';
+import { registerErrorListener } from '../services/api';
 
 const NotificationContext = createContext(null);
 
@@ -43,6 +44,13 @@ export const NotificationProvider = ({ children }) => {
     const success = useCallback((message, title = 'Success') => {
         return showAlert(message, title, 'success');
     }, [showAlert]);
+
+    // Register this error handler with the API service
+    useEffect(() => {
+        registerErrorListener((msg) => {
+            error(msg);
+        });
+    }, [error]);
 
     return (
         <NotificationContext.Provider value={{ showAlert, confirm, error, success }}>
