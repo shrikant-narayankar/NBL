@@ -3,8 +3,10 @@ import { api } from '../services/api';
 import Modal from '../components/Modal';
 import { Plus, User, Trash2 } from 'lucide-react';
 import Pagination from '../components/Pagination';
+import { useNotification } from '../context/NotificationContext';
 
 const Members = () => {
+    const { success, error, confirm } = useNotification();
     const [members, setMembers] = useState([]);
     const [metadata, setMetadata] = useState({ total: 0, page: 1, size: 10, pages: 0 });
     const [isLoading, setIsLoading] = useState(true);
@@ -48,8 +50,9 @@ const Members = () => {
             setIsEditing(false);
             setEditMemberId(null);
             fetchMembers(metadata.page);
+            success(`Member ${isEditing ? 'updated' : 'registered'} successfully!`);
         } catch (err) {
-            alert(`Failed to ${isEditing ? 'update' : 'register'} member: ` + err.message);
+            error(`Failed to ${isEditing ? 'update' : 'register'} member: ` + err.message);
         }
     };
 
@@ -68,12 +71,14 @@ const Members = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!confirm("Are you sure?")) return;
+        const confirmed = await confirm("Are you sure you want to delete this member?");
+        if (!confirmed) return;
         try {
             await api.deleteMember(id);
             fetchMembers(metadata.page);
+            success("Member deleted successfully!");
         } catch (err) {
-            alert("Failed to delete member: " + err.message);
+            error("Failed to delete member: " + err.message);
         }
     }
 

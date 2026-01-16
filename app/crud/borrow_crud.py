@@ -49,6 +49,22 @@ async def get_borrows_by_member(db: AsyncSession, member_id: int, status: Status
     return items, total
 
 
+async def get_borrows_by_book(db: AsyncSession, book_id: int, status: Status, skip: int = 0, limit: int = 10):
+    query = select(BorrowTransaction).where(BorrowTransaction.book_id == book_id)
+    if status == Status.borrowed:
+        query = query.where(BorrowTransaction.returned_date == None)
+    elif status == Status.returned:
+        query = query.where(BorrowTransaction.returned_date != None)
+
+    total_result = await db.execute(select(func.count()).select_from(query.alias()))
+    total = total_result.scalar()
+
+    query = query.options(selectinload(BorrowTransaction.member)).offset(skip).limit(limit)
+    result = await db.execute(query)
+    items = result.scalars().all()
+    return items, total
+
+
 async def delete_by_id(db: AsyncSession, borrow_id: int):
     result = await db.execute(select(BorrowTransaction).where(BorrowTransaction.id == borrow_id))
     borrow = result.scalar_one_or_none()

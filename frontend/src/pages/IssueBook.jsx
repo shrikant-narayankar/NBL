@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import Select from 'react-select';
 import { Repeat, ArrowLeft } from 'lucide-react';
+import { useNotification } from '../context/NotificationContext';
 
 const IssueBook = () => {
+    const { success, error } = useNotification();
     const navigate = useNavigate();
     const [members, setMembers] = useState([]);
     const [books, setBooks] = useState([]);
@@ -28,7 +30,7 @@ const IssueBook = () => {
                 setBooks(bResponse.items);
             } catch (e) {
                 console.error(e);
-                alert("Failed to load members or books");
+                error("Failed to load members or books");
             }
         };
         fetchResources();
@@ -43,9 +45,10 @@ const IssueBook = () => {
                 member_id: parseInt(formData.member_id),
                 book_id: parseInt(formData.book_id)
             });
+            success('Book issued successfully!');
             navigate('/borrow');
         } catch (err) {
-            alert('Failed to borrow book: ' + err.message);
+            error('Failed to borrow book: ' + err.message);
         } finally {
             setIsLoading(false);
         }

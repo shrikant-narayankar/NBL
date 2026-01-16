@@ -3,8 +3,10 @@ import { api } from '../services/api';
 import Modal from '../components/Modal';
 import { Plus, BookOpen, Trash2 } from 'lucide-react';
 import Pagination from '../components/Pagination';
+import { useNotification } from '../context/NotificationContext';
 
 const Books = () => {
+    const { success, error, confirm } = useNotification();
     const [books, setBooks] = useState([]);
     const [metadata, setMetadata] = useState({ total: 0, page: 1, size: 10, pages: 0 });
     const [isLoading, setIsLoading] = useState(true);
@@ -16,7 +18,7 @@ const Books = () => {
         total_copies: 1,
         available_copies: 1
     });
-    const [error, setError] = useState(null);
+    const [bookFetchError, setBookFetchError] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [isEditing, setIsEditing] = useState(false);
     const [editBookId, setEditBookId] = useState(null);
@@ -34,7 +36,7 @@ const Books = () => {
             });
         } catch (err) {
             console.error(err);
-            setError('Failed to fetch books');
+            setBookFetchError('Failed to fetch books');
         } finally {
             setIsLoading(false);
         }
@@ -74,9 +76,10 @@ const Books = () => {
             setIsEditing(false);
             setEditBookId(null);
             fetchBooks();
+            success(`Book ${isEditing ? 'updated' : 'created'} successfully!`);
         } catch (err) {
             console.error(err);
-            alert(`Failed to ${isEditing ? 'update' : 'create'} book: ` + err.message);
+            error(`Failed to ${isEditing ? 'update' : 'create'} book: ` + err.message);
         }
     };
 
@@ -107,12 +110,14 @@ const Books = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!confirm("Are you sure you want to delete this book?")) return;
+        const confirmed = await confirm("Are you sure you want to delete this book?");
+        if (!confirmed) return;
         try {
             await api.deleteBook(id);
-            fetchBooks(); // Refresh list
+            fetchBooks();
+            success("Book deleted successfully!");
         } catch (err) {
-            alert("Failed to delete book: " + err.message);
+            error("Failed to delete book: " + err.message);
         }
     }
 

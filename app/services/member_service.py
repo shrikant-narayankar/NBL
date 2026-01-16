@@ -31,7 +31,17 @@ async def update_member(db: AsyncSession, member_id: int, member_update: MemberU
 
 async def delete_member(db: AsyncSession, member_id: int):
     from app.crud.members_crud import delete_by_id
+    from app.crud.borrow_crud import get_borrows_by_member
+    from app.schemas.members import Status
     from fastapi import HTTPException
+
+    # Check if member has active borrows
+    _, total_active = await get_borrows_by_member(db, member_id, Status.borrowed, limit=1)
+    if total_active > 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot delete member with active borrow transactions. All books must be returned first."
+        )
 
     deleted = await delete_by_id(db, member_id)
     if not deleted:

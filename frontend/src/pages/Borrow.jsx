@@ -5,8 +5,10 @@ import Select from 'react-select';
 import Modal from '../components/Modal';
 import { Repeat, CheckCircle, AlertCircle } from 'lucide-react';
 import Pagination from '../components/Pagination';
+import { useNotification } from '../context/NotificationContext';
 
 const Borrow = () => {
+    const { success, error, confirm } = useNotification();
     const [activeBorrows, setActiveBorrows] = useState([]);
     const [statusFilter, setStatusFilter] = useState('borrowed'); // 'borrowed' | 'returned' | 'all'
     const [metadata, setMetadata] = useState({ total: 0, page: 1, size: 10, pages: 0 });
@@ -47,7 +49,8 @@ const Borrow = () => {
 
 
     const handleReturn = async (borrow) => {
-        if (!confirm(`Return "${borrow.book.title}" from ${borrow.member.name}?`)) return;
+        const confirmed = await confirm(`Are you sure you want to return "${borrow.book.title}" from ${borrow.member.name}?`);
+        if (!confirmed) return;
         try {
             await api.returnBook({
                 book_id: borrow.book_id,
@@ -55,8 +58,9 @@ const Borrow = () => {
                 returned_date: new Date().toISOString().split('T')[0]
             });
             fetchData(metadata.page);
+            success("Book returned successfully!");
         } catch (err) {
-            alert("Failed to return book: " + err.message);
+            error("Failed to return book: " + err.message);
         }
     }
 

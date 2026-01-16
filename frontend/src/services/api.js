@@ -2,8 +2,14 @@ const API_BASE = '/api/v1';
 
 const handleResponse = async (response) => {
     if (!response.ok) {
-        const errorBody = await response.text();
-        throw new Error(errorBody || 'Network response was not ok');
+        let errorMessage = 'Network response was not ok';
+        try {
+            const errorData = await response.json();
+            errorMessage = errorData.detail || errorData.message || JSON.stringify(errorData);
+        } catch (e) {
+            errorMessage = await response.text() || errorMessage;
+        }
+        throw new Error(errorMessage);
     }
     // For 204 No Content, return null
     if (response.status === 204) return null;

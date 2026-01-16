@@ -35,7 +35,17 @@ async def update_book(db: AsyncSession, book_id: int, book_update: BookUpdateReq
 
 async def delete_book(db: AsyncSession, book_id: int):
     from app.crud.books_crud import delete_by_id
+    from app.crud.borrow_crud import get_borrows_by_book
+    from app.schemas.members import Status
     from fastapi import HTTPException
+
+    # Check if book has active borrows
+    _, total_active = await get_borrows_by_book(db, book_id, Status.borrowed, limit=1)
+    if total_active > 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot delete book that is currently borrowed. It must be returned first."
+        )
 
     deleted = await delete_by_id(db, book_id)
     if not deleted:
