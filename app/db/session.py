@@ -8,7 +8,7 @@ from app.core.settings import settings
 from app.db.base import Base
 
 # use the async sqlalchemy URL (falls back to constructed URL if DATABASE_URL not set)
-DATABASE_URL = settings.DATABASE_URL
+DATABASE_URL = settings.sqlalchemy_async_database_url
 
 engine = create_async_engine(
     DATABASE_URL,
