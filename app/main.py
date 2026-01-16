@@ -24,4 +24,7 @@ app = FastAPI(
 # Add Logging Middleware
 app.add_middleware(LoggingMiddleware)
 
+from app.core.exception_handlers import register_exception_handlers
+register_exception_handlers(app)
+    
 app.include_router(v1_router.router, prefix=settings.API_STR)
