@@ -37,6 +37,12 @@ export const api = {
             body: JSON.stringify(member),
         }).then(handleResponse),
     getMemberBorrows: (id, page = 1, size = 10) => fetch(`${API_BASE}/members/${id}/borrows?page=${page}&size=${size}`).then(handleResponse),
+    updateMember: (id, member) =>
+        fetch(`${API_BASE}/members/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(member),
+        }).then(handleResponse),
     deleteMember: (id) =>
         fetch(`${API_BASE}/members/${id}`, { method: 'DELETE' }).then(handleResponse),
 

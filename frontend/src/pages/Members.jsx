@@ -10,6 +10,8 @@ const Members = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({ name: '', email: '' });
+    const [isEditing, setIsEditing] = useState(false);
+    const [editMemberId, setEditMemberId] = useState(null);
 
     const fetchMembers = async (page = 1) => {
         try {
@@ -36,13 +38,33 @@ const Members = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await api.createMember(formData);
+            if (isEditing) {
+                await api.updateMember(editMemberId, formData);
+            } else {
+                await api.createMember(formData);
+            }
             setIsModalOpen(false);
             setFormData({ name: '', email: '' });
-            fetchMembers(1);
+            setIsEditing(false);
+            setEditMemberId(null);
+            fetchMembers(metadata.page);
         } catch (err) {
-            alert('Failed to create member: ' + err.message);
+            alert(`Failed to ${isEditing ? 'update' : 'register'} member: ` + err.message);
         }
+    };
+
+    const handleEdit = (member) => {
+        setIsEditing(true);
+        setEditMemberId(member.id);
+        setFormData({ name: member.name, email: member.email });
+        setIsModalOpen(true);
+    };
+
+    const handleRegisterClick = () => {
+        setIsEditing(false);
+        setEditMemberId(null);
+        setFormData({ name: '', email: '' });
+        setIsModalOpen(true);
     };
 
     const handleDelete = async (id) => {
@@ -62,7 +84,7 @@ const Members = () => {
                     <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Members</h1>
                     <p style={{ color: 'var(--text-muted)' }}>Registered library members</p>
                 </div>
-                <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
+                <button className="btn btn-primary" onClick={handleRegisterClick}>
                     <Plus size={20} />
                     Register Member
                 </button>
@@ -108,9 +130,14 @@ const Members = () => {
                                         <td style={{ padding: '1rem' }}>{member.email}</td>
                                         <td style={{ padding: '1rem', fontFamily: 'monospace', color: 'var(--text-muted)' }}>#{member.id}</td>
                                         <td style={{ padding: '1rem' }}>
-                                            <button className="btn-ghost" onClick={() => handleDelete(member.id)} style={{ color: 'red' }}>
-                                                <Trash2 size={18} />
-                                            </button>
+                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                <button className="btn-ghost" onClick={() => handleEdit(member)} title="Edit Member" style={{ color: 'var(--color-primary)' }}>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                                </button>
+                                                <button className="btn-ghost" onClick={() => handleDelete(member.id)} style={{ color: 'red' }}>
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))
@@ -126,7 +153,7 @@ const Members = () => {
                 </div>
             )}
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Register New Member">
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={isEditing ? "Edit Member" : "Register New Member"}>
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>Full Name</label>
@@ -150,7 +177,7 @@ const Members = () => {
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
                         <button type="button" className="btn btn-ghost" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                        <button type="submit" className="btn btn-primary">Register</button>
+                        <button type="submit" className="btn btn-primary">{isEditing ? 'Update' : 'Register'}</button>
                     </div>
                 </form>
             </Modal>

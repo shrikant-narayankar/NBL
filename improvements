@@ -1,0 +1,18 @@
+frontend
+Please find the frontend code review feedback below. Kindly incorporate the required changes and share the updated submission.  
+Edit flows for Books and Members are not implemented at the UI level, even though update APIs exist. These are mandatory functional gaps.
+Custom input validation is missing (e.g., trimming whitespace, blocking empty values), action buttons are not disabled during API calls, and API error states are not consistently handled or displayed.
+API error handling is implemented only at the component level. There is no centralized API error handling (e.g., interceptor or shared wrapper), leading to duplicated logic and inconsistent error management across the application.
+Tables and create/edit modals are implemented repeatedly across entities, impacting maintainability. Consider refactoring them into reusable components (e.g., Reusable DataTable, Reusable modal/dialogs) and apply them consistently across all relevant flows.
+Consider moving route definitions to a separate routes file with centralized path constants, replace browser alert()/confirm() with a centralized notification system and custom dialogs, wrap the app with error boundaries, and consolidate styling using a single approach(e.g., MUI sx/styled components or CSS modules) instead of using inline styles consistently across the application.
+
+backend
+Thank you for the submission. I’ve provided feedback for the backend implementation. Kindly make the incorporated the action items and resubmit by raising a PR.
+
+Action items:
+Implement proper logging across the service.
+Add test coverage.
+
+Reduce hard-coded values by introducing centralized constants/configs.
+
+(Good to have) Introduce a gRPC layer with .proto definitions for stronger service contracts (REST APIs are acceptable).

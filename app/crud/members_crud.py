@@ -30,6 +30,12 @@ async def get_all_members(db: AsyncSession, skip: int = 0, limit: int = 10):
     return items, total
 
 
+async def update(db: AsyncSession, member: Member) -> Member:
+    await db.commit()
+    await db.refresh(member)
+    return member
+
+
 async def delete_by_id(db: AsyncSession, member_id: int) -> Member | None:
     result = await db.execute(select(Member).where(Member.id == member_id))
     member = result.scalar_one_or_none()

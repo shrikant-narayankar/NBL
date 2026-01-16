@@ -53,9 +53,9 @@ async def get_members(
         pages=pages
     )
 
-@router.patch("/", status_code=status.HTTP_200_OK)
-async def update_member(member: MemberUpdate, db_session=Depends(get_db)):
-    return {"message": "Member updated", "member": member}
+@router.patch("/{member_id}", status_code=status.HTTP_200_OK, response_model=MemberResponse)
+async def update_member(member_id: int, member: MemberUpdate, db_session=Depends(get_db)):
+    return await member_service.update_member(db_session, member_id, member)
 
 
 @router.delete("/{member_id}", status_code=status.HTTP_204_NO_CONTENT)

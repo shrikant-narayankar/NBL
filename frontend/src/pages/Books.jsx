@@ -18,6 +18,8 @@ const Books = () => {
     });
     const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [isEditing, setIsEditing] = useState(false);
+    const [editBookId, setEditBookId] = useState(null);
 
     const fetchBooks = async (page = 1, q = searchQuery) => {
         try {
@@ -56,7 +58,11 @@ const Books = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await api.createBook(formData);
+            if (isEditing) {
+                await api.updateBook(editBookId, formData);
+            } else {
+                await api.createBook(formData);
+            }
             setIsModalOpen(false);
             setFormData({
                 title: '',
@@ -65,11 +71,39 @@ const Books = () => {
                 total_copies: 1,
                 available_copies: 1
             });
+            setIsEditing(false);
+            setEditBookId(null);
             fetchBooks();
         } catch (err) {
             console.error(err);
-            alert('Failed to create book: ' + err.message);
+            alert(`Failed to ${isEditing ? 'update' : 'create'} book: ` + err.message);
         }
+    };
+
+    const handleEdit = (book) => {
+        setIsEditing(true);
+        setEditBookId(book.id);
+        setFormData({
+            title: book.title,
+            author: book.author,
+            isbn: book.isbn,
+            total_copies: book.total_copies,
+            available_copies: book.available_copies
+        });
+        setIsModalOpen(true);
+    };
+
+    const handleAddClick = () => {
+        setIsEditing(false);
+        setEditBookId(null);
+        setFormData({
+            title: '',
+            author: '',
+            isbn: '',
+            total_copies: 1,
+            available_copies: 1
+        });
+        setIsModalOpen(true);
     };
 
     const handleDelete = async (id) => {
@@ -108,7 +142,7 @@ const Books = () => {
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                         </div>
                     </div>
-                    <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
+                    <button className="btn btn-primary" onClick={handleAddClick}>
                         <Plus size={20} />
                         Add Book
                     </button>
@@ -167,9 +201,14 @@ const Books = () => {
                                             </span>
                                         </td>
                                         <td style={{ padding: '1rem' }}>
-                                            <button className="btn-ghost" onClick={() => handleDelete(book.id)} title="Delete Book" style={{ color: 'red' }}>
-                                                <Trash2 size={18} />
-                                            </button>
+                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                <button className="btn-ghost" onClick={() => handleEdit(book)} title="Edit Book" style={{ color: 'var(--color-primary)' }}>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                                </button>
+                                                <button className="btn-ghost" onClick={() => handleDelete(book.id)} title="Delete Book" style={{ color: 'red' }}>
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))
@@ -185,7 +224,7 @@ const Books = () => {
                 </div>
             )}
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add New Book">
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={isEditing ? "Edit Book" : "Add New Book"}>
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>Title</label>
@@ -224,15 +263,32 @@ const Books = () => {
                                 value={formData.total_copies}
                                 onChange={e => {
                                     const val = parseInt(e.target.value);
-                                    setFormData({ ...formData, total_copies: val, available_copies: val });
+                                    if (isEditing) {
+                                        setFormData({ ...formData, total_copies: val });
+                                    } else {
+                                        setFormData({ ...formData, total_copies: val, available_copies: val });
+                                    }
                                 }}
                             />
                         </div>
+                        {isEditing && (
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>Available Copies</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max={formData.total_copies}
+                                    required
+                                    value={formData.available_copies}
+                                    onChange={e => setFormData({ ...formData, available_copies: parseInt(e.target.value) })}
+                                />
+                            </div>
+                        )}
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
                         <button type="button" className="btn btn-ghost" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                        <button type="submit" className="btn btn-primary">Create Book</button>
+                        <button type="submit" className="btn btn-primary">{isEditing ? 'Update Book' : 'Create Book'}</button>
                     </div>
                 </form>
             </Modal>
