@@ -2,17 +2,21 @@ from app.crud.books_crud import create, get_books, get_by_id, get_by_isbn, updat
 from app.schemas.books import BookCreateRequest, BookUpdateRequest
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
+from loguru import logger
 
 
 async def create_book(db: AsyncSession, book: BookCreateRequest):
+    logger.debug(f"Creating book: {book.title}")
     return await create(db, book=book)
 
 
 async def get_all_books(db: AsyncSession, skip: int = 0, limit: int = 10, q: str | None = None):
+    logger.debug(f"Fetching books (skip={skip}, limit={limit}, query={q})")
     return await get_books(db, skip=skip, limit=limit, q=q)
 
 
 async def update_book(db: AsyncSession, book_id: int, book_update: BookUpdateRequest):
+    logger.debug(f"Updating book with ID: {book_id}")
     # fetch existing
     existing = await get_by_id(db, book_id)
     if not existing:

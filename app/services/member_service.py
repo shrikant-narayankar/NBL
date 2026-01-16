@@ -2,15 +2,19 @@ from app.schemas.members import MemberCreate, MemberUpdate
 from app.crud.members_crud import create, get_by_id, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
+from loguru import logger
 
 async def create_member(db: AsyncSession, member: MemberCreate):
+    logger.debug(f"Registering member: {member.name}")
     return await create(db, member=member)
 
 async def get_member_borrows(db: AsyncSession, member_id: int, status, skip: int = 0, limit: int = 10):
+    logger.debug(f"Fetching borrows for member ID: {member_id}")
     from app.crud.borrow_crud import get_borrows_by_member
     return await get_borrows_by_member(db, member_id, status, skip=skip, limit=limit)
 
 async def get_members(db: AsyncSession, skip: int = 0, limit: int = 10):
+    logger.debug(f"Fetching members (skip={skip}, limit={limit})")
     from app.crud.members_crud import get_all_members
     return await get_all_members(db, skip=skip, limit=limit)
 

@@ -4,12 +4,14 @@ from app.db.session import get_db
 from fastapi import status
 from app.services import book_service
 from fastapi import Response
+from loguru import logger
 router = APIRouter()
 
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_book(book: BookCreateRequest, db_session=Depends(get_db)):
+    logger.info(f"Creating book with title: {book.title}")
     return await book_service.create_book(db_session, book)
 
 from app.schemas.common import PaginatedResponse
@@ -41,6 +43,7 @@ async def update_book(book_id: int, book: BookUpdateRequest, db_session=Depends(
 
 @router.delete("/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_book(book_id: int, db_session=Depends(get_db)):
+    logger.info(f"Deleting book with id: {book_id}")
     await book_service.delete_book(db_session, book_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 

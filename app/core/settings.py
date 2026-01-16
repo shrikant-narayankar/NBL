@@ -10,6 +10,7 @@ class NBLSettings(BaseSettings):
     DEBUG: bool = True
     HOST: str = "0.0.0.0"
     PORT: int = 8000
+    LOG_JSON: bool = False
 
     # Postgres / SQLAlchemy
     DATABASE_URL: Optional[str] = None  # complete URL if provided

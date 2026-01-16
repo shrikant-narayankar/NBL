@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import date
+from loguru import logger
 from app.models.borrow import BorrowTransaction
 from app.schemas.borrow import ReturnRequest
 from app.models.book import Book
@@ -21,6 +22,7 @@ async def borrow_book(
     borrowed_date: date,
     due_date: date
 ):
+    logger.debug(f"Process borrow request: member={member_id}, book={book_id}")
     book = await get_by_id(db, book_id)
     member = await members_crud.get_by_id(db, member_id)
     if not member:
@@ -47,6 +49,7 @@ async def borrow_book(
     return borrow
 
 async def return_book(db: AsyncSession, return_request: ReturnRequest):
+    logger.debug(f"Process return request: member={return_request.member_id}, book={return_request.book_id}")
     book = await get_by_id(db, return_request.book_id)
     if not book:
         raise BookNotAvailable("Book does not exist")

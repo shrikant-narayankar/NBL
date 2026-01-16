@@ -7,7 +7,7 @@ class MemberResponse(BaseModel):
     email: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 class MemberCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=200, description="Member name")
     email: str = Field(..., min_length=1, max_length=150, description="Member email")

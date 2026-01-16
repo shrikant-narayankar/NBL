@@ -5,12 +5,14 @@ from app.db.session import get_db
 
 from fastapi import status
 from app.services import member_service
+from loguru import logger
 router = APIRouter()
 
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_member(member: MemberCreate, db_session=Depends(get_db)):
+    logger.info(f"Creating member with name: {member.name}")
     return await member_service.create_member(db_session, member)
 
 from app.schemas.common import PaginatedResponse
@@ -55,11 +57,13 @@ async def get_members(
 
 @router.patch("/{member_id}", status_code=status.HTTP_200_OK, response_model=MemberResponse)
 async def update_member(member_id: int, member: MemberUpdate, db_session=Depends(get_db)):
+    logger.info(f"Updating member with id: {member_id}")
     return await member_service.update_member(db_session, member_id, member)
 
 
 @router.delete("/{member_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_member(member_id: int, db_session=Depends(get_db)):
+    logger.info(f"Deleting member with id: {member_id}")
     await member_service.delete_member(db_session, member_id)
     from fastapi import Response
     return Response(status_code=status.HTTP_204_NO_CONTENT)

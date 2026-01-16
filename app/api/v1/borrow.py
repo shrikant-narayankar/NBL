@@ -15,6 +15,7 @@ from fastapi import status
 from app.services import borrow_service
 from app.db.session import get_db
 from fastapi import Response
+from loguru import logger
 router = APIRouter()
 
 
@@ -45,6 +46,7 @@ async def get_borrows(
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def borrow_book(member: BorrowRequest,db_session=Depends(get_db)):
+    logger.info(f"Issuing book with id: {member.book_id} to member with id: {member.member_id}")
     return await borrow_service.borrow_book(
         db_session, 
         member_id=member.member_id, 
@@ -55,6 +57,7 @@ async def borrow_book(member: BorrowRequest,db_session=Depends(get_db)):
 
 @router.patch("/", status_code=status.HTTP_200_OK)
 async def return_book(return_request: ReturnRequest, db_session=Depends(get_db)):
+    logger.info(f"Returning book with id: {return_request.book_id} from member with id: {return_request.member_id}")
     return await borrow_service.return_book(db_session, return_request=return_request)
 
 

@@ -22,7 +22,7 @@ class ActiveBorrowBase(BaseModel):
     returned_date: date | None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ActiveBorrowWithBook(ActiveBorrowBase):
