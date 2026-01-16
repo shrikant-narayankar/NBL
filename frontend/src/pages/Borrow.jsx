@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../services/api';
-import Select from 'react-select';
-import Modal from '../components/Modal';
 import { Repeat, CheckCircle, AlertCircle } from 'lucide-react';
-import Pagination from '../components/Pagination';
+import DataTable from '../components/DataTable';
 import { useNotification } from '../context/NotificationContext';
 
 const Borrow = () => {
@@ -28,13 +26,11 @@ const Borrow = () => {
                 pages: response.pages
             });
         } catch (err) {
-            console.error(err);
+            // Centralized error handling
         } finally {
             setIsLoading(false);
         }
     };
-
-
 
     useEffect(() => {
         fetchData(metadata.page);
@@ -44,10 +40,6 @@ const Borrow = () => {
     useEffect(() => {
         setMetadata(m => ({ ...m, page: 1 }));
     }, [statusFilter]);
-
-
-
-
 
     const handleReturn = async (borrow) => {
         const confirmed = await confirm(`Are you sure you want to return "${borrow.book.title}" from ${borrow.member.name}?`);
@@ -62,11 +54,70 @@ const Borrow = () => {
             fetchData(metadata.page);
             success("Book returned successfully!");
         } catch (err) {
-            console.error(err);
+            // Centralized error handling
         } finally {
             setReturningId(null);
         }
     }
+
+    // Process data for display (add overdue logic for styling)
+    const tableData = activeBorrows.map(borrow => {
+        const isOverdue = new Date(borrow.due_date) < new Date();
+        const isReturnedLate = borrow.returned_date && new Date(borrow.returned_date) > new Date(borrow.due_date);
+        const isLateValues = (!borrow.returned_date && isOverdue) || isReturnedLate;
+
+        return {
+            ...borrow,
+            bg_color: isLateValues ? 'rgba(255, 0, 0, 0.05)' : 'transparent',
+            isLateValues,
+            isReturnedLate
+        };
+    });
+
+    const columns = [
+        {
+            header: 'Book',
+            render: (b) => <span style={{ fontWeight: 500 }}>{b.book?.title || 'Unknown Book'}</span>
+        },
+        {
+            header: 'Member',
+            render: (b) => b.member?.name || 'Unknown Member'
+        },
+        { header: 'Borrowed Date', accessor: 'borrowed_date' },
+        {
+            header: 'Due Date',
+            render: (b) => (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: b.isLateValues ? 'red' : 'inherit' }}>
+                    {b.due_date}
+                    {b.isLateValues && <AlertCircle size={16} />}
+                </div>
+            )
+        },
+        ...(statusFilter !== 'borrowed' ? [{
+            header: 'Returned Date',
+            render: (b) => (
+                <span style={{ color: b.isReturnedLate ? 'red' : 'var(--text-muted)' }}>
+                    {b.returned_date || '-'}
+                </span>
+            )
+        }] : []),
+        {
+            header: 'Actions',
+            render: (b) => (
+                !b.returned_date && (
+                    <button
+                        className="btn btn-ghost"
+                        onClick={() => handleReturn(b)}
+                        style={{ color: 'green', gap: '0.25rem' }}
+                        disabled={returningId === b.id}
+                    >
+                        <CheckCircle size={18} />
+                        {returningId === b.id ? 'Returning...' : 'Return'}
+                    </button>
+                )
+            )
+        }
+    ];
 
     return (
         <div>
@@ -126,84 +177,18 @@ const Borrow = () => {
                 </div>
             </div>
 
-            {isLoading ? (
-                <div className="card">Loading...</div>
-            ) : (
-                <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                        <thead style={{ backgroundColor: 'rgba(0,0,0,0.02)', borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
-                            <tr>
-                                <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--text-muted)' }}>Book</th>
-                                <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--text-muted)' }}>Member</th>
-                                <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--text-muted)' }}>Borrowed Date</th>
-                                <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--text-muted)' }}>Due Date</th>
-                                {statusFilter !== 'borrowed' && <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--text-muted)' }}>Returned Date</th>}
-                                <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--text-muted)' }}>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {activeBorrows.length === 0 ? (
-                                <tr>
-                                    <td colSpan="6" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                                        No borrow records found.
-                                    </td>
-                                </tr>
-                            ) : (
-                                activeBorrows.map((borrow) => {
-                                    /* Check if overdue */
-                                    const isOverdue = new Date(borrow.due_date) < new Date();
-                                    const isReturnedLate = borrow.returned_date && new Date(borrow.returned_date) > new Date(borrow.due_date);
-
-                                    const isLateValues = (!borrow.returned_date && isOverdue) || isReturnedLate;
-
-                                    return (
-                                        <tr key={borrow.id} style={{
-                                            borderBottom: '1px solid rgba(0,0,0,0.05)',
-                                            backgroundColor: isLateValues ? 'rgba(255, 0, 0, 0.05)' : 'transparent'
-                                        }}>
-                                            <td style={{ padding: '1rem', fontWeight: 500 }}>{borrow.book?.title || 'Unknown Book'}</td>
-                                            <td style={{ padding: '1rem' }}>{borrow.member?.name || 'Unknown Member'}</td>
-                                            <td style={{ padding: '1rem' }}>{borrow.borrowed_date}</td>
-                                            <td style={{ padding: '1rem' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: isLateValues ? 'red' : 'inherit' }}>
-                                                    {borrow.due_date}
-                                                    {isLateValues && <AlertCircle size={16} />}
-                                                </div>
-                                            </td>
-                                            {statusFilter !== 'borrowed' && (
-                                                <td style={{ padding: '1rem', color: isReturnedLate ? 'red' : 'var(--text-muted)' }}>
-                                                    {borrow.returned_date || '-'}
-                                                </td>
-                                            )}
-                                            <td style={{ padding: '1rem' }}>
-                                                {!borrow.returned_date && (
-                                                    <button
-                                                        className="btn btn-ghost"
-                                                        onClick={() => handleReturn(borrow)}
-                                                        style={{ color: 'green', gap: '0.25rem' }}
-                                                        disabled={returningId === borrow.id}
-                                                    >
-                                                        <CheckCircle size={18} />
-                                                        {returningId === borrow.id ? 'Returning...' : 'Return'}
-                                                    </button>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    )
-                                })
-                            )}
-                        </tbody>
-                    </table>
-                    <Pagination
-                        page={metadata.page}
-                        pages={metadata.pages}
-                        total={metadata.total}
-                        onPageChange={(p) => setMetadata({ ...metadata, page: p })}
-                    />
-                </div>
-            )}
-
-
+            <DataTable
+                columns={columns}
+                data={tableData}
+                isLoading={isLoading}
+                pagination={{
+                    page: metadata.page,
+                    pages: metadata.pages,
+                    total: metadata.total,
+                    onPageChange: (p) => setMetadata({ ...metadata, page: p })
+                }}
+                emptyMessage="No borrow records found."
+            />
         </div>
     );
 };

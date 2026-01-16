@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { api } from '../services/api';
-import Modal from '../components/Modal';
+import DataTable from '../components/DataTable';
+import FormModal from '../components/FormModal';
 import { Plus, BookOpen, Trash2 } from 'lucide-react';
-import Pagination from '../components/Pagination';
 import { useNotification } from '../context/NotificationContext';
 
 const Books = () => {
@@ -18,11 +18,12 @@ const Books = () => {
         total_copies: 1,
         available_copies: 1
     });
-    const [bookFetchError, setBookFetchError] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [isEditing, setIsEditing] = useState(false);
     const [editBookId, setEditBookId] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    // deletingId is local to the row render in the old code, but with DataTable we pass the state down or handle it in render.
+    // For simplicity in DataTable render prop, accessing component state is fine.
     const [deletingId, setDeletingId] = useState(null);
 
     const fetchBooks = async (page = 1, q = searchQuery) => {
@@ -37,8 +38,7 @@ const Books = () => {
                 pages: response.pages
             });
         } catch (err) {
-            console.error(err);
-            setBookFetchError('Failed to fetch books');
+            // Error managed centralized
         } finally {
             setIsLoading(false);
         }
@@ -95,7 +95,7 @@ const Books = () => {
             fetchBooks(metadata.page);
             success(`Book ${isEditing ? 'updated' : 'created'} successfully!`);
         } catch (err) {
-            console.error(err);
+            // Managed centralized
         } finally {
             setIsSubmitting(false);
         }
@@ -133,15 +133,77 @@ const Books = () => {
         try {
             setDeletingId(id);
             await api.deleteBook(id);
-            // Refresh the current page
             fetchBooks(metadata.page);
             success("Book deleted successfully!");
         } catch (err) {
-            console.error(err);
+            // Managed centralized
         } finally {
             setDeletingId(null);
         }
     }
+
+    const columns = [
+        {
+            header: 'Title',
+            render: (book) => (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{
+                        width: '40px', height: '40px',
+                        background: 'var(--color-primary)',
+                        borderRadius: '8px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: 'white', opacity: 0.8
+                    }}>
+                        <BookOpen size={20} />
+                    </div>
+                    <span style={{ fontWeight: 500 }}>{book.title}</span>
+                </div>
+            )
+        },
+        { header: 'Author', accessor: 'author' },
+        {
+            header: 'ISBN',
+            accessor: 'isbn',
+            style: { color: 'var(--text-muted)', fontFamily: 'monospace' }
+        },
+        {
+            header: 'Copies',
+            render: (book) => (
+                <span style={{
+                    padding: '0.25rem 0.75rem',
+                    borderRadius: '999px',
+                    backgroundColor: book.available_copies > 0 ? 'rgba(0, 200, 0, 0.1)' : 'rgba(200, 0, 0, 0.1)',
+                    color: book.available_copies > 0 ? 'green' : 'red',
+                    fontSize: '0.875rem'
+                }}>
+                    {book.available_copies} / {book.total_copies}
+                </span>
+            )
+        },
+        {
+            header: 'Actions',
+            render: (book) => (
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button className="btn-ghost" onClick={() => handleEdit(book)} title="Edit Book" style={{ color: 'var(--color-primary)' }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
+                    <button
+                        className="btn-ghost"
+                        onClick={() => handleDelete(book.id)}
+                        title="Delete Book"
+                        style={{ color: 'red', opacity: deletingId === book.id ? 0.5 : 1 }}
+                        disabled={deletingId === book.id}
+                    >
+                        {deletingId === book.id ? (
+                            <div style={{ width: 18, height: 18, border: '2px solid red', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                        ) : (
+                            <Trash2 size={18} />
+                        )}
+                    </button>
+                </div>
+            )
+        }
+    ];
 
     return (
         <div>
@@ -176,161 +238,87 @@ const Books = () => {
                 </div>
             </div>
 
-            {isLoading ? (
-                <div className="card">Loading...</div>
-            ) : (
-                <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                        <thead style={{ backgroundColor: 'rgba(0,0,0,0.02)', borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
-                            <tr>
-                                <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--text-muted)' }}>Title</th>
-                                <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--text-muted)' }}>Author</th>
-                                <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--text-muted)' }}>ISBN</th>
-                                <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--text-muted)' }}>Copies</th>
-                                <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--text-muted)' }}>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {books.length === 0 ? (
-                                <tr>
-                                    <td colSpan="5" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                                        {searchQuery ? `No books found matching "${searchQuery}"` : "No books found. Add one to get started."}
-                                    </td>
-                                </tr>
-                            ) : (
-                                books.map((book) => (
-                                    <tr key={book.id} style={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
-                                        <td style={{ padding: '1rem' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                                <div style={{
-                                                    width: '40px', height: '40px',
-                                                    background: 'var(--color-primary)',
-                                                    borderRadius: '8px',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    color: 'white', opacity: 0.8
-                                                }}>
-                                                    <BookOpen size={20} />
-                                                </div>
-                                                <span style={{ fontWeight: 500 }}>{book.title}</span>
-                                            </div>
-                                        </td>
-                                        <td style={{ padding: '1rem' }}>{book.author}</td>
-                                        <td style={{ padding: '1rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{book.isbn}</td>
-                                        <td style={{ padding: '1rem' }}>
-                                            <span style={{
-                                                padding: '0.25rem 0.75rem',
-                                                borderRadius: '999px',
-                                                backgroundColor: book.available_copies > 0 ? 'rgba(0, 200, 0, 0.1)' : 'rgba(200, 0, 0, 0.1)',
-                                                color: book.available_copies > 0 ? 'green' : 'red',
-                                                fontSize: '0.875rem'
-                                            }}>
-                                                {book.available_copies} / {book.total_copies}
-                                            </span>
-                                        </td>
-                                        <td style={{ padding: '1rem' }}>
-                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                <button className="btn-ghost" onClick={() => handleEdit(book)} title="Edit Book" style={{ color: 'var(--color-primary)' }}>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                                </button>
-                                                <button
-                                                    className="btn-ghost"
-                                                    onClick={() => handleDelete(book.id)}
-                                                    title="Delete Book"
-                                                    style={{ color: 'red', opacity: deletingId === book.id ? 0.5 : 1 }}
-                                                    disabled={deletingId === book.id}
-                                                >
-                                                    {deletingId === book.id ? (
-                                                        <div style={{ width: 18, height: 18, border: '2px solid red', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-                                                    ) : (
-                                                        <Trash2 size={18} />
-                                                    )}
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                    <Pagination
-                        page={metadata.page}
-                        pages={metadata.pages}
-                        total={metadata.total}
-                        onPageChange={(p) => setMetadata({ ...metadata, page: p })}
+            <DataTable
+                columns={columns}
+                data={books}
+                isLoading={isLoading}
+                pagination={{
+                    page: metadata.page,
+                    pages: metadata.pages,
+                    total: metadata.total,
+                    onPageChange: (p) => setMetadata({ ...metadata, page: p })
+                }}
+                emptyMessage={searchQuery ? `No books found matching "${searchQuery}"` : "No books found. Add one to get started."}
+            />
+
+            <FormModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title={isEditing ? "Edit Book" : "Add New Book"}
+                onSubmit={handleSubmit}
+                isSubmitting={isSubmitting}
+                submitLabel={isEditing ? 'Update Book' : 'Create Book'}
+            >
+                <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>Title</label>
+                    <input
+                        required
+                        value={formData.title}
+                        onChange={e => setFormData({ ...formData, title: e.target.value })}
+                        placeholder="The Great Gatsby"
                     />
                 </div>
-            )}
-
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={isEditing ? "Edit Book" : "Add New Book"}>
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>Author</label>
+                    <input
+                        required
+                        value={formData.author}
+                        onChange={e => setFormData({ ...formData, author: e.target.value })}
+                        placeholder="F. Scott Fitzgerald"
+                    />
+                </div>
+                <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>ISBN</label>
+                    <input
+                        required
+                        value={formData.isbn}
+                        onChange={e => setFormData({ ...formData, isbn: e.target.value })}
+                        placeholder="978-0-7432-7356-5"
+                    />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                     <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>Title</label>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>Total Copies</label>
                         <input
+                            type="number"
+                            min="1"
                             required
-                            value={formData.title}
-                            onChange={e => setFormData({ ...formData, title: e.target.value })}
-                            placeholder="The Great Gatsby"
+                            value={formData.total_copies}
+                            onChange={e => {
+                                const val = parseInt(e.target.value);
+                                if (isEditing) {
+                                    setFormData({ ...formData, total_copies: val });
+                                } else {
+                                    setFormData({ ...formData, total_copies: val, available_copies: val });
+                                }
+                            }}
                         />
                     </div>
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>Author</label>
-                        <input
-                            required
-                            value={formData.author}
-                            onChange={e => setFormData({ ...formData, author: e.target.value })}
-                            placeholder="F. Scott Fitzgerald"
-                        />
-                    </div>
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>ISBN</label>
-                        <input
-                            required
-                            value={formData.isbn}
-                            onChange={e => setFormData({ ...formData, isbn: e.target.value })}
-                            placeholder="978-0-7432-7356-5"
-                        />
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    {isEditing && (
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>Total Copies</label>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>Available Copies</label>
                             <input
                                 type="number"
-                                min="1"
+                                min="0"
+                                max={formData.total_copies}
                                 required
-                                value={formData.total_copies}
-                                onChange={e => {
-                                    const val = parseInt(e.target.value);
-                                    if (isEditing) {
-                                        setFormData({ ...formData, total_copies: val });
-                                    } else {
-                                        setFormData({ ...formData, total_copies: val, available_copies: val });
-                                    }
-                                }}
+                                value={formData.available_copies}
+                                onChange={e => setFormData({ ...formData, available_copies: parseInt(e.target.value) })}
                             />
                         </div>
-                        {isEditing && (
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>Available Copies</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    max={formData.total_copies}
-                                    required
-                                    value={formData.available_copies}
-                                    onChange={e => setFormData({ ...formData, available_copies: parseInt(e.target.value) })}
-                                />
-                            </div>
-                        )}
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
-                        <button type="button" className="btn btn-ghost" onClick={() => setIsModalOpen(false)} disabled={isSubmitting}>Cancel</button>
-                        <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-                            {isSubmitting ? 'Saving...' : (isEditing ? 'Update Book' : 'Create Book')}
-                        </button>
-                    </div>
-                </form>
-            </Modal>
+                    )}
+                </div>
+            </FormModal>
         </div>
     );
 };
