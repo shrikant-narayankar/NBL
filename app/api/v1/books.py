@@ -14,6 +14,7 @@ async def create_book(book: BookCreateRequest, db_session=Depends(get_db)):
     logger.info(f"Creating book with title: {book.title}")
     return await book_service.create_book(db_session, book)
 
+from app.core.constants import DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
 from app.schemas.common import PaginatedResponse
 from fastapi import Query
 import math
@@ -21,8 +22,8 @@ import math
 @router.get("/", status_code=status.HTTP_200_OK, response_model=PaginatedResponse[BookResponse])
 async def get_books(
     db_session=Depends(get_db),
-    page: int = Query(1, ge=1),
-    size: int = Query(10, ge=1, le=100),
+    page: int = Query(DEFAULT_PAGE, ge=1),
+    size: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
     q: str | None = Query(None, description="Search query for title or author")
 ):
     skip = (page - 1) * size

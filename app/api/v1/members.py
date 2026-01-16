@@ -18,14 +18,15 @@ async def create_member(member: MemberCreate, db_session=Depends(get_db)):
 from app.schemas.common import PaginatedResponse
 from fastapi import Query
 import math
+from app.core.constants import DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
 
 @router.get("/{member_id}/borrows", status_code=status.HTTP_200_OK, response_model=PaginatedResponse[BorrowMemberResponse])
 async def get_member_borrows(
     member_id: int, 
     status: Status = Status.all, 
     db_session=Depends(get_db),
-    page: int = Query(1, ge=1),
-    size: int = Query(10, ge=1, le=100)
+    page: int = Query(DEFAULT_PAGE, ge=1),
+    size: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE)
 ):
     skip = (page - 1) * size
     items, total = await member_service.get_member_borrows(db_session, member_id, status, skip=skip, limit=size)
@@ -41,8 +42,8 @@ async def get_member_borrows(
 @router.get("/", status_code=status.HTTP_200_OK, response_model=PaginatedResponse[MemberResponse])
 async def get_members(
     db_session=Depends(get_db),
-    page: int = Query(1, ge=1),
-    size: int = Query(10, ge=1, le=100)
+    page: int = Query(DEFAULT_PAGE, ge=1),
+    size: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE)
 ):
     skip = (page - 1) * size
     items, total = await member_service.get_members(db_session, skip=skip, limit=size)

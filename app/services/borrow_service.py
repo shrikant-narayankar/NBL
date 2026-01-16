@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import date
 from loguru import logger
+from app.core.constants import MSG_BORROW_NOT_FOUND
 from app.models.borrow import BorrowTransaction
 from app.schemas.borrow import ReturnRequest
 from app.models.book import Book
@@ -90,5 +91,5 @@ async def delete_borrow(db: AsyncSession, borrow_id: int):
     deleted = await borrow_crud.delete_by_id(db, borrow_id)
     from fastapi import HTTPException
     if not deleted:
-        raise HTTPException(status_code=404, detail=f"Borrow transaction with id {borrow_id} not found")
+        raise HTTPException(status_code=404, detail=MSG_BORROW_NOT_FOUND.format(id=borrow_id))
     return None

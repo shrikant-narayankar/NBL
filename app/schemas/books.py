@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field, validator
+from app.core.constants import BOOK_TITLE_MAX_LEN, BOOK_AUTHOR_MAX_LEN, BOOK_ISBN_MAX_LEN
 
 class BookResponse(BaseModel):
     id: int
@@ -12,9 +13,9 @@ class BookResponse(BaseModel):
         from_attributes = True
 
 class BookCreateRequest(BaseModel):
-    title: str = Field(..., min_length=1, max_length=200, description="Book title")
-    author: str = Field(..., min_length=1, max_length=150, description="Book author")
-    isbn: str = Field(..., min_length=1, max_length=20, description="ISBN number")
+    title: str = Field(..., min_length=1, max_length=BOOK_TITLE_MAX_LEN, description="Book title")
+    author: str = Field(..., min_length=1, max_length=BOOK_AUTHOR_MAX_LEN, description="Book author")
+    isbn: str = Field(..., min_length=1, max_length=BOOK_ISBN_MAX_LEN, description="ISBN number")
     total_copies: int = Field(default=1, ge=1, description="Total number of copies")
     available_copies: int = Field(default=1, ge=0, description="Available copies")
 
@@ -37,9 +38,9 @@ class BookCreateRequest(BaseModel):
 
 
 class BookUpdateRequest(BaseModel):
-    title: str | None = Field(None, min_length=1, max_length=200)
-    author: str | None = Field(None, min_length=1, max_length=150)
-    isbn: str | None = Field(None, min_length=1, max_length=20)
+    title: str | None = Field(None, min_length=1, max_length=BOOK_TITLE_MAX_LEN)
+    author: str | None = Field(None, min_length=1, max_length=BOOK_AUTHOR_MAX_LEN)
+    isbn: str | None = Field(None, min_length=1, max_length=BOOK_ISBN_MAX_LEN)
     total_copies: int | None = Field(None, ge=1)
     available_copies: int | None = Field(None, ge=0)
 

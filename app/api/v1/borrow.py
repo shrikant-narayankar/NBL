@@ -22,14 +22,15 @@ router = APIRouter()
 
 from app.schemas.common import PaginatedResponse
 import math
+from app.core.constants import DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
 
 @router.get("/", status_code=status.HTTP_200_OK, response_model=PaginatedResponse[Union[ActiveBorrowWithBook, ActiveBorrowWithMember, ActiveBorrowWithAll]])
 async def get_borrows(
     db_session=Depends(get_db),
     status: Status = Query(Status.all, description="Filter by status (borrowed, returned, all)"),
     include: Include = Query(Include.all, description="Include nested related data"),
-    page: int = Query(1, ge=1),
-    size: int = Query(10, ge=1, le=100),
+    page: int = Query(DEFAULT_PAGE, ge=1),
+    size: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
     sort_by: str = Query("borrowed_date", description="Sort by field: book, member, borrowed_date, due_date"),
     order: str = Query("desc", description="Order: asc, desc")
 ):
@@ -69,8 +70,8 @@ async def return_book(return_request: ReturnRequest, db_session=Depends(get_db))
 async def get_active_borrows(
     db_session=Depends(get_db),
     include: Include = Query(Include.all, description="Include nested related data: 'book', 'member', or 'all'"),
-    page: int = Query(1, ge=1),
-    size: int = Query(10, ge=1, le=100),
+    page: int = Query(DEFAULT_PAGE, ge=1),
+    size: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
     sort_by: str = Query("borrowed_date", description="Sort by field: book, member, borrowed_date, due_date"),
     order: str = Query("desc", description="Order: asc, desc")
 ):

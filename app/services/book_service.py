@@ -3,6 +3,7 @@ from app.schemas.books import BookCreateRequest, BookUpdateRequest
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
 from loguru import logger
+from app.core.constants import MSG_BOOK_NOT_FOUND, MSG_BOOK_ISBN_EXISTS, MSG_BOOK_BORROWED
 
 
 async def create_book(db: AsyncSession, book: BookCreateRequest):
@@ -20,7 +21,7 @@ async def update_book(db: AsyncSession, book_id: int, book_update: BookUpdateReq
     # fetch existing
     existing = await get_by_id(db, book_id)
     if not existing:
-        raise HTTPException(status_code=404, detail=f"Book with id {book_id} not found")
+        raise HTTPException(status_code=404, detail=MSG_BOOK_NOT_FOUND.format(id=book_id))
 
     # check ISBN uniqueness if updating isbn
     data = book_update.model_dump(exclude_none=True)
@@ -28,7 +29,7 @@ async def update_book(db: AsyncSession, book_id: int, book_update: BookUpdateReq
     if new_isbn:
         other = await get_by_isbn(db, new_isbn)
         if other and other.id != book_id:
-            raise HTTPException(status_code=409, detail=f"Book with ISBN {new_isbn!r} already exists")
+            raise HTTPException(status_code=409, detail=MSG_BOOK_ISBN_EXISTS.format(isbn=new_isbn))
 
     # apply updates
     for key, value in data.items():
@@ -48,10 +49,10 @@ async def delete_book(db: AsyncSession, book_id: int):
     if total_active > 0:
         raise HTTPException(
             status_code=400,
-            detail="Cannot delete book that is currently borrowed. It must be returned first."
+            detail=MSG_BOOK_BORROWED
         )
 
     deleted = await delete_by_id(db, book_id)
     if not deleted:
-        raise HTTPException(status_code=404, detail=f"Book with id {book_id} not found")
+        raise HTTPException(status_code=404, detail=MSG_BOOK_NOT_FOUND.format(id=book_id))
     return None

@@ -6,6 +6,8 @@ from urllib.parse import quote_plus
 class NBLSettings(BaseSettings):
     # app
     APP_NAME: str = "NBL"
+    PROJECT_NAME: str = "NBL API"
+    API_STR: str = "/api"
     ENV: str = "development"
     DEBUG: bool = True
     HOST: str = "0.0.0.0"

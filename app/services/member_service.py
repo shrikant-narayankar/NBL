@@ -3,6 +3,7 @@ from app.crud.members_crud import create, get_by_id, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
 from loguru import logger
+from app.core.constants import MSG_MEMBER_NOT_FOUND, MSG_MEMBER_ACTIVE_BORROWS
 
 async def create_member(db: AsyncSession, member: MemberCreate):
     logger.debug(f"Registering member: {member.name}")
@@ -23,7 +24,7 @@ async def update_member(db: AsyncSession, member_id: int, member_update: MemberU
     # fetch existing
     existing = await get_by_id(db, member_id)
     if not existing:
-        raise HTTPException(status_code=404, detail=f"Member with id {member_id} not found")
+        raise HTTPException(status_code=404, detail=MSG_MEMBER_NOT_FOUND.format(id=member_id))
 
     # apply updates
     data = member_update.model_dump(exclude_none=True)
@@ -44,11 +45,11 @@ async def delete_member(db: AsyncSession, member_id: int):
     if total_active > 0:
         raise HTTPException(
             status_code=400,
-            detail="Cannot delete member with active borrow transactions. All books must be returned first."
+            detail=MSG_MEMBER_ACTIVE_BORROWS
         )
 
     deleted = await delete_by_id(db, member_id)
     if not deleted:
-        raise HTTPException(status_code=404, detail=f"Member with id {member_id} not found")
+        raise HTTPException(status_code=404, detail=MSG_MEMBER_NOT_FOUND.format(id=member_id))
     return None
 
